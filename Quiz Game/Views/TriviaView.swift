@@ -8,34 +8,45 @@
 import SwiftUI
 
 struct TriviaView: View {
-    @StateObject var triviaManager = TriviaVM()
+    @StateObject var triviaVM = TriviaVM()
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
         NavigationStack {
-            if triviaManager.reachedEnd {
+            if triviaVM.reachedEnd {
                 VStack(spacing: 20) {
                     Text("Quiz Game")
                         .accentTitle()
                     Text("Congratulations, you completed the game! 🥳")
                     
-                    Text("You scored \(triviaManager.score) out of \(triviaManager.length)")
+                    Text("You scored \(triviaVM.score) out of \(triviaVM.length)")
+                    
+                    HStack {
+                        Button("Play Again") {
+                            Task {
+                                await triviaVM.fetchTrivia()
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .foregroundColor(Color.theme.primaryTextInverse)
+                        
+                        Button("Quit Game") {
+                            dismiss()
+                        }
+                        .buttonStyle(.bordered)
+                    }
+
                 }
                 .foregroundColor(Color.theme.accent)
                 .padding()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.theme.background)
             
-            Button("Play Again") {
-                Task {
-                    await triviaManager.fetchTrivia()
-                }
-            }
-            .buttonStyle(.borderedProminent)
+
             
             } else {
                 QuestionView()
-                    .environmentObject(triviaManager)
+                    .environmentObject(triviaVM)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("End Game") {

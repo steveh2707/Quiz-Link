@@ -23,14 +23,18 @@ struct AnswerRow: View {
                 Spacer()
                 Image(systemName: answer.isCorrect ? "checkmark.circle.fill" : "x.circle.fill")
                     .foregroundColor(answer.isCorrect ? .green : .red)
+            } else if triviaManager.answerSelected && answer.isCorrect {
+                Spacer()
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.green)
             }
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .foregroundColor(triviaManager.answerSelected ? (isSelected ? Color.theme.accent : .gray) : Color.theme.accent)
-        .background(Color.theme.background)
+        .background(.white)
         .cornerRadius(10)
-        .shadow(color: isSelected ? (answer.isCorrect ? .green : .red) : .gray, radius: 5, x: 0.5, y: 0.5)
+        .shadow(color: isSelected ? (answer.isCorrect ? .green : .red) : (triviaManager.answerSelected && answer.isCorrect ? .green : .gray), radius: 5, x: 0.5, y: 0.5)
         .onTapGesture {
             if !triviaManager.answerSelected {
                 isSelected = true

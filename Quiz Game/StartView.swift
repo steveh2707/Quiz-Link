@@ -10,9 +10,14 @@ import SwiftUI
 struct StartView: View {
     
     @State private var gameType: GameType = .single
-    @State private var yourName = "Steve"
+//    @State private var yourName = "Steve"
+    @AppStorage("yourName") var yourName = ""
     @FocusState private var focus: Bool
     @State private var startGame = false
+    
+    init(yourName: String) {
+        self.yourName = yourName
+    }
     
     var body: some View {
         NavigationStack {
@@ -33,7 +38,7 @@ struct StartView: View {
                 VStack {
                     switch gameType {
                     case .single:
-                        TextField("Your Name", text: $yourName)
+                        EmptyView()
                     case .peer:
                         EmptyView()
                     case .undetermined:
@@ -52,11 +57,15 @@ struct StartView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(
-                        gameType == .undetermined ||
-                        gameType == .single && yourName.isEmpty
+                        gameType == .undetermined
                     )
                 }
                 Spacer()
+                Text("Your name is \(yourName)")
+                Button("Change Name") {
+                    
+                }
+                .buttonStyle(.bordered)
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -72,6 +81,6 @@ struct StartView: View {
 
 struct StartView_Previews: PreviewProvider {
     static var previews: some View {
-        StartView()
+        StartView(yourName: "Steve")
     }
 }

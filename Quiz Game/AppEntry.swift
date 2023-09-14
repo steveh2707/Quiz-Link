@@ -9,9 +9,14 @@ import SwiftUI
 
 @main
 struct Quiz_GameApp: App {
+    @AppStorage("yourName") var yourName = ""
     var body: some Scene {
         WindowGroup {
-            StartView()
+            if yourName.isEmpty {
+                YourNameView()
+            } else {
+                StartView(yourName: yourName)
+            }
         }
     }
 }

@@ -28,3 +28,10 @@ struct Answer: Identifiable {
     var text: AttributedString
     var isCorrect: Bool
 }
+
+
+struct Player {
+    var name: String
+    var score: Int
+    var isWinner: Bool = false
+}

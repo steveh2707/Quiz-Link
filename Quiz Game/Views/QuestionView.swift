@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct QuestionView: View {
-    @EnvironmentObject var triviaManager: TriviaVM
+    @EnvironmentObject var triviaVM: TriviaVM
     
     var body: some View {
         VStack(spacing: 40) {
@@ -18,31 +18,31 @@ struct QuestionView: View {
                 
                 Spacer()
                 
-                Text("\(triviaManager.index+1) out of \(triviaManager.length)")
+                Text("\(triviaVM.index+1) out of \(triviaVM.length)")
                     .foregroundColor(Color.theme.accent)
                     .fontWeight(.heavy)
             }
             
-            ProgressBar(progress: triviaManager.progress)
+            ProgressBar(progress: triviaVM.progress)
             
-            VStack(alignment: .leading) {
-                Text(triviaManager.question)
+            VStack(alignment: .leading, spacing: 20) {
+                Text(triviaVM.question)
                     .font(.system(size: 20))
                     .bold()
                     .foregroundColor(.theme.secondaryText)
                     .padding(.bottom)
                 
-                ForEach(triviaManager.answerChoices, id: \.id) { answer in
+                ForEach(triviaVM.answerChoices, id: \.id) { answer in
                     AnswerRow(answer: answer)
                 }
 
             }
             
             Button("Next") {
-                triviaManager.goToNextQuestion()
+                triviaVM.goToNextQuestion()
             }
             .buttonStyle(.borderedProminent)
-            .disabled(!triviaManager.answerSelected)
+            .disabled(!triviaVM.answerSelected)
             Spacer()
         }
         .padding()
