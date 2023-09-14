@@ -8,14 +8,19 @@
 import SwiftUI
 
 struct StartView: View {
-    @State private var gameType: GameType = .undetermined
-    @State private var yourName = ""
+    
+    @State private var gameType: GameType = .single
+    @State private var yourName = "Steve"
     @FocusState private var focus: Bool
     @State private var startGame = false
     
     var body: some View {
         NavigationStack {
             VStack {
+                Spacer()
+                Text("Quiz Game")
+                    .accentTitle()
+                    .padding()
                 Picker("Select Game", selection: $gameType) {
                     Text("Select Game Type").tag(GameType.undetermined)
                     Text("Play on your own").tag(GameType.single)
@@ -54,9 +59,12 @@ struct StartView: View {
                 Spacer()
             }
             .padding()
-            .navigationTitle("Quiz Game")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.theme.background)
+//            .navigationTitle("Quiz Game")
             .fullScreenCover(isPresented: $startGame) {
-                GameView()
+                TriviaView()
+                    
             }
         }
     }
