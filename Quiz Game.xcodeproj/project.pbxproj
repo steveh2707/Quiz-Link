@@ -17,12 +17,15 @@
 		AA005CF42AB30BA1005AB524 /* QuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005CF32AB30BA1005AB524 /* QuestionView.swift */; };
 		AA005CF72AB30C9C005AB524 /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005CF62AB30C9C005AB524 /* ProgressBar.swift */; };
 		AA005CF92AB30F00005AB524 /* AnswerRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005CF82AB30F00005AB524 /* AnswerRow.swift */; };
-		AA005CFB2AB313BE005AB524 /* TriviaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005CFA2AB313BE005AB524 /* TriviaView.swift */; };
+		AA005CFB2AB313BE005AB524 /* ShowQuestionsOrEndScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005CFA2AB313BE005AB524 /* ShowQuestionsOrEndScreen.swift */; };
 		AA005CFD2AB314DC005AB524 /* Trivia.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005CFC2AB314DC005AB524 /* Trivia.swift */; };
 		AA005D002AB3163E005AB524 /* NetworkingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005CFF2AB3163E005AB524 /* NetworkingManager.swift */; };
 		AA005D022AB31675005AB524 /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D012AB31675005AB524 /* Endpoint.swift */; };
 		AA005D042AB31A69005AB524 /* TriviaVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D032AB31A69005AB524 /* TriviaVM.swift */; };
 		AA005D072AB34EB9005AB524 /* YourNameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D062AB34EB9005AB524 /* YourNameView.swift */; };
+		AA005D0B2AB352C4005AB524 /* MPConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D0A2AB352C4005AB524 /* MPConnectionManager.swift */; };
+		AA005D0D2AB35751005AB524 /* MPGameMove.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D0C2AB35751005AB524 /* MPGameMove.swift */; };
+		AA005D0F2AB36195005AB524 /* MPPeersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D0E2AB36195005AB524 /* MPPeersView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,12 +40,16 @@
 		AA005CF32AB30BA1005AB524 /* QuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionView.swift; sourceTree = "<group>"; };
 		AA005CF62AB30C9C005AB524 /* ProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBar.swift; sourceTree = "<group>"; };
 		AA005CF82AB30F00005AB524 /* AnswerRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnswerRow.swift; sourceTree = "<group>"; };
-		AA005CFA2AB313BE005AB524 /* TriviaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriviaView.swift; sourceTree = "<group>"; };
+		AA005CFA2AB313BE005AB524 /* ShowQuestionsOrEndScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowQuestionsOrEndScreen.swift; sourceTree = "<group>"; };
 		AA005CFC2AB314DC005AB524 /* Trivia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trivia.swift; sourceTree = "<group>"; };
 		AA005CFF2AB3163E005AB524 /* NetworkingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkingManager.swift; sourceTree = "<group>"; };
 		AA005D012AB31675005AB524 /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
 		AA005D032AB31A69005AB524 /* TriviaVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriviaVM.swift; sourceTree = "<group>"; };
 		AA005D062AB34EB9005AB524 /* YourNameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YourNameView.swift; sourceTree = "<group>"; };
+		AA005D082AB35202005AB524 /* Quiz-Game-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Quiz-Game-Info.plist"; sourceTree = SOURCE_ROOT; };
+		AA005D0A2AB352C4005AB524 /* MPConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPConnectionManager.swift; sourceTree = "<group>"; };
+		AA005D0C2AB35751005AB524 /* MPGameMove.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPGameMove.swift; sourceTree = "<group>"; };
+		AA005D0E2AB36195005AB524 /* MPPeersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPPeersView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,12 +82,14 @@
 		AA005CD72AB1F28C005AB524 /* Quiz Game */ = {
 			isa = PBXGroup;
 			children = (
+				AA005D082AB35202005AB524 /* Quiz-Game-Info.plist */,
 				AA005CD82AB1F28C005AB524 /* AppEntry.swift */,
 				AA005CDA2AB1F28C005AB524 /* StartView.swift */,
 				AA005CEC2AB3097E005AB524 /* Views */,
 				AA005D052AB32F5E005AB524 /* ViewModels */,
 				AA005CF52AB30C5A005AB524 /* Components */,
 				AA005CE62AB30026005AB524 /* Models */,
+				AA005D092AB35298005AB524 /* MultiPeerConnectivity */,
 				AA005CEE2AB30A08005AB524 /* Extensions */,
 				AA005CFE2AB3161D005AB524 /* Utilities */,
 				AA005CDC2AB1F28F005AB524 /* Assets.xcassets */,
@@ -109,7 +118,7 @@
 		AA005CEC2AB3097E005AB524 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				AA005CFA2AB313BE005AB524 /* TriviaView.swift */,
+				AA005CFA2AB313BE005AB524 /* ShowQuestionsOrEndScreen.swift */,
 				AA005CF32AB30BA1005AB524 /* QuestionView.swift */,
 				AA005D062AB34EB9005AB524 /* YourNameView.swift */,
 			);
@@ -149,6 +158,16 @@
 				AA005D032AB31A69005AB524 /* TriviaVM.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		AA005D092AB35298005AB524 /* MultiPeerConnectivity */ = {
+			isa = PBXGroup;
+			children = (
+				AA005D0A2AB352C4005AB524 /* MPConnectionManager.swift */,
+				AA005D0C2AB35751005AB524 /* MPGameMove.swift */,
+				AA005D0E2AB36195005AB524 /* MPPeersView.swift */,
+			);
+			path = MultiPeerConnectivity;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -227,11 +246,14 @@
 				AA005CF02AB30A1F005AB524 /* Text.swift in Sources */,
 				AA005D022AB31675005AB524 /* Endpoint.swift in Sources */,
 				AA005CFD2AB314DC005AB524 /* Trivia.swift in Sources */,
-				AA005CFB2AB313BE005AB524 /* TriviaView.swift in Sources */,
+				AA005CFB2AB313BE005AB524 /* ShowQuestionsOrEndScreen.swift in Sources */,
 				AA005CE82AB30041005AB524 /* GameModels.swift in Sources */,
 				AA005CF42AB30BA1005AB524 /* QuestionView.swift in Sources */,
+				AA005D0D2AB35751005AB524 /* MPGameMove.swift in Sources */,
 				AA005D072AB34EB9005AB524 /* YourNameView.swift in Sources */,
 				AA005CD92AB1F28C005AB524 /* AppEntry.swift in Sources */,
+				AA005D0B2AB352C4005AB524 /* MPConnectionManager.swift in Sources */,
+				AA005D0F2AB36195005AB524 /* MPPeersView.swift in Sources */,
 				AA005D002AB3163E005AB524 /* NetworkingManager.swift in Sources */,
 				AA005CF72AB30C9C005AB524 /* ProgressBar.swift in Sources */,
 				AA005CF22AB30A71005AB524 /* Color.swift in Sources */,
@@ -369,6 +391,8 @@
 				DEVELOPMENT_TEAM = 4EDERT4V6A;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Quiz-Game-Info.plist";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Would like to play Quiz Game";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -398,6 +422,8 @@
 				DEVELOPMENT_TEAM = 4EDERT4V6A;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Quiz-Game-Info.plist";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Would like to play Quiz Game";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

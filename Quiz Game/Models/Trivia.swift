@@ -9,9 +9,9 @@ import Foundation
 
 struct Trivia: Codable {
     var responseCode: Int
-    var results: [Result]
+    var results: [Question]
     
-    struct Result: Codable, Identifiable {
+    struct Question: Codable, Identifiable {
         // We need to set the ID inside of the closure, because the API doesn' return us an ID for each result
         var id: UUID {
             UUID()

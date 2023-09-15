@@ -9,14 +9,18 @@ import SwiftUI
 
 struct StartView: View {
     
-    @State private var gameType: GameType = .single
-//    @State private var yourName = "Steve"
+
+    @StateObject private var connectionManager: MPConnectionManager
+    @StateObject var triviaVM: TriviaVM
+    
     @AppStorage("yourName") var yourName = ""
     @FocusState private var focus: Bool
     @State private var startGame = false
     
     init(yourName: String) {
         self.yourName = yourName
+        self._connectionManager = StateObject(wrappedValue: MPConnectionManager(yourName: yourName))
+        self._triviaVM = StateObject(wrappedValue: TriviaVM(yourName: yourName))
     }
     
     var body: some View {
@@ -26,21 +30,23 @@ struct StartView: View {
                 Text("Quiz Game")
                     .accentTitle()
                     .padding()
-                Picker("Select Game", selection: $gameType) {
+                Picker("Select Game", selection: $triviaVM.gameType) {
                     Text("Select Game Type").tag(GameType.undetermined)
                     Text("Play on your own").tag(GameType.single)
                     Text("Play against a friend").tag(GameType.peer)
                 }
                 .padding()
                 .background(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(lineWidth: 2))
-                Text(gameType.description)
+                Text(triviaVM.gameType.description)
                     .padding()
                 VStack {
-                    switch gameType {
+                    switch triviaVM.gameType {
                     case .single:
                         EmptyView()
                     case .peer:
-                        EmptyView()
+                        MPPeersView(startGame: $startGame)
+                            .environmentObject(connectionManager)
+                            .environmentObject(triviaVM)
                     case .undetermined:
                         EmptyView()
                     }
@@ -50,14 +56,14 @@ struct StartView: View {
                 .focused($focus)
                 .frame(width: 350)
                 
-                if gameType != .peer {
+                if triviaVM.gameType != .peer {
                     Button("Start Game") {
                         focus = false
                         startGame = true
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(
-                        gameType == .undetermined
+                        triviaVM.gameType == .undetermined
                     )
                 }
                 Spacer()
@@ -70,9 +76,13 @@ struct StartView: View {
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.theme.background)
-//            .navigationTitle("Quiz Game")
             .fullScreenCover(isPresented: $startGame) {
-                TriviaView()
+                ShowQuestionsOrEndScreen()
+                    .environmentObject(connectionManager)
+                    .environmentObject(triviaVM)
+                    .onDisappear {
+                        triviaVM.endGame()
+                    }
                     
             }
         }

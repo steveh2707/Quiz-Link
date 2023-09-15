@@ -23,7 +23,7 @@ enum GameType {
 }
 
 
-struct Answer: Identifiable {
+struct Answer: Identifiable, Codable, Equatable {
     var id = UUID()
     var text: AttributedString
     var isCorrect: Bool
@@ -32,6 +32,7 @@ struct Answer: Identifiable {
 
 struct Player {
     var name: String
-    var score: Int
+    var score: Int = 0
     var isWinner: Bool = false
+    var answer: Answer? = nil
 }
