@@ -85,6 +85,31 @@ class MPConnectionManager: NSObject, ObservableObject {
             }
         }
     }
+    
+    @MainActor
+    func invitePeer(peer: MCPeerID, game: TriviaVM) {
+        game.gameType = .peer
+        nearbyServiceBrowser.invitePeer(peer, to: session, withContext: nil, timeout: 30)
+        game.player1.name = myPeerId.displayName
+        game.player2.name = peer.displayName
+        game.host = true
+    }
+    
+    @MainActor
+    func acceptInvite(game: TriviaVM) {
+        if let invitationHandler = invitationHandler {
+            invitationHandler(true, session)
+            game.player1.name = myPeerId.displayName
+            game.player2.name = receivedInviteFrom?.displayName ?? "Unknown"
+            game.gameType = .peer
+        }
+    }
+    
+    func declineInvite() {
+        if let invitationHandler = invitationHandler {
+            invitationHandler(false, nil)
+        }
+    }
 }
 
 // Add and remove local peers from availablePeers array
@@ -106,7 +131,7 @@ extension MPConnectionManager: MCNearbyServiceBrowserDelegate {
     }
 }
 
-// received invite to play
+// handle received invites
 extension MPConnectionManager: MCNearbyServiceAdvertiserDelegate {
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
@@ -118,7 +143,7 @@ extension MPConnectionManager: MCNearbyServiceAdvertiserDelegate {
     }
 }
 
-
+// handle connection and received moves
 extension MPConnectionManager: MCSessionDelegate {
     
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
@@ -142,6 +167,7 @@ extension MPConnectionManager: MCSessionDelegate {
         }
     }
     
+    
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         
         if let gameMove = try? JSONDecoder().decode(MPGameMove.self, from: data) {
@@ -164,15 +190,12 @@ extension MPConnectionManager: MCSessionDelegate {
     }
     
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
-        
     }
     
     func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
-        
     }
     
     func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
-        
     }
     
     
