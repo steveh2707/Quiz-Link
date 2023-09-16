@@ -24,7 +24,7 @@ struct AnswerRow: View {
                 Spacer()
                 Image(systemName: answer.isCorrect ? "checkmark.circle.fill" : "x.circle.fill")
                     .foregroundColor(answer.isCorrect ? .green : .red)
-            } else if triviaManager.player1.answer != nil && answer.isCorrect {
+            } else if triviaManager.players[0].answer != nil && answer.isCorrect {
                 Spacer()
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
@@ -32,14 +32,14 @@ struct AnswerRow: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .foregroundColor(triviaManager.player1.answer == answer ? (isSelected ? Color.theme.accent : .gray) : Color.theme.accent)
+        .foregroundColor(triviaManager.players[0].answer == answer ? (isSelected ? Color.theme.accent : .gray) : Color.theme.accent)
         .background(Color.theme.backgroundSecondary)
         .cornerRadius(10)
-        .shadow(color: isSelected ? (answer.isCorrect ? .green : .red) : (triviaManager.player1.answer != nil && answer.isCorrect ? .green : .gray), radius: 5, x: 0.5, y: 0.5)
+        .shadow(color: isSelected ? (answer.isCorrect ? .green : .red) : (triviaManager.players[0].answer != nil && answer.isCorrect ? .green : .gray), radius: 5, x: 0.5, y: 0.5)
         .onTapGesture {
-            if triviaManager.player1.answer == nil {
+            if triviaManager.players[0].answer == nil {
                 isSelected = true
-                triviaManager.selectAnswer(answer: answer)
+                triviaManager.selectAnswer(index: 0, answer: answer)
                 if triviaManager.gameType == .peer {
                     let gameMove = MPGameMove(action: .move, playerName: connectionManager.myPeerId.displayName, questionSet: [], answer: answer)
                     connectionManager.send(gameMove: gameMove)

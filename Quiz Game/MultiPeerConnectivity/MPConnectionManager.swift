@@ -90,8 +90,10 @@ class MPConnectionManager: NSObject, ObservableObject {
     func invitePeer(peer: MCPeerID, game: TriviaVM) {
         game.gameType = .peer
         nearbyServiceBrowser.invitePeer(peer, to: session, withContext: nil, timeout: 30)
-        game.player1.name = myPeerId.displayName
-        game.player2.name = peer.displayName
+//        game.player1.name = myPeerId.displayName
+//        game.player2.name = peer.displayName
+        game.players[0].name = myPeerId.displayName
+        game.players.append(Player(name: peer.displayName))
         game.host = true
     }
     
@@ -99,8 +101,10 @@ class MPConnectionManager: NSObject, ObservableObject {
     func acceptInvite(game: TriviaVM) {
         if let invitationHandler = invitationHandler {
             invitationHandler(true, session)
-            game.player1.name = myPeerId.displayName
-            game.player2.name = receivedInviteFrom?.displayName ?? "Unknown"
+//            game.player1.name = myPeerId.displayName
+//            game.player2.name = receivedInviteFrom?.displayName ?? "Unknown"
+            game.players[0].name = myPeerId.displayName
+            game.players.append(Player(name: receivedInviteFrom?.displayName ?? "Unknown"))
             game.gameType = .peer
         }
     }
@@ -156,8 +160,8 @@ extension MPConnectionManager: MCSessionDelegate {
         case .connected:
             DispatchQueue.main.async {
                 self.paired = true
-                self.isAvailableToPlay = false
-                self.availablePeers = []
+//                self.isAvailableToPlay = false
+//                self.availablePeers = []
             }
         default:
             DispatchQueue.main.async {
@@ -176,8 +180,12 @@ extension MPConnectionManager: MCSessionDelegate {
                 case .start:
                     self.game?.setTrivia(questions: gameMove.questionSet)
                 case .move:
-                    if let answer = gameMove.answer {
-                        self.game?.setOpponentAnswer(answer: answer)
+                    if let answer = gameMove.answer, let name = gameMove.playerName {
+                        let i = self.game?.findIndexOfPlayer(name: name)
+                        if let i, i > -1 {
+                            self.game?.selectAnswer(index: i, answer: answer)
+                        }
+//                        self.game?.setOpponentAnswer(answer: answer)
                     }
                 case .next:
                     self.game?.goToNextQuestion()

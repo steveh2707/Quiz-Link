@@ -29,13 +29,17 @@ struct MPPeersView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .alert("Received invite from \(connectionManager.receivedInviteFrom?.displayName ?? "Unknown")", isPresented: $connectionManager.receivedInvite) {
-                Button("Accept Invite") {
-                    connectionManager.acceptInvite(game: game)
-                }
-                Button("Reject") {
-                    connectionManager.declineInvite()
-                }
+            Text("Connected Players")
+            ForEach(game.players) { connected in
+                Text(connected.name)
+            }
+        }
+        .alert("Received invite from \(connectionManager.receivedInviteFrom?.displayName ?? "Unknown")", isPresented: $connectionManager.receivedInvite) {
+            Button("Accept Invite") {
+                connectionManager.acceptInvite(game: game)
+            }
+            Button("Reject") {
+                connectionManager.declineInvite()
             }
         }
         .background(Color.theme.background)

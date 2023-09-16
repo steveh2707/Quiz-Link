@@ -24,19 +24,21 @@ struct ShowQuestionsOrEndScreen: View {
                         Text("Congratulations, you completed the game! 🥳")
                             .multilineTextAlignment(.center)
                         
-                        Text("You scored \(triviaVM.player1.score) out of \(triviaVM.length)")
+                        Text("You scored \(triviaVM.players[0].score) out of \(triviaVM.length)")
                     } else if triviaVM.gameType == .peer {
                         
-                        Text("You scored \(triviaVM.player1.score) out of \(triviaVM.length)")
-                        Text("\(triviaVM.player2.name) scored \(triviaVM.player2.score) out of \(triviaVM.length)")
+                        Text("You scored \(triviaVM.players[0].score) out of \(triviaVM.length)")
                         
-                        if triviaVM.player1.score > triviaVM.player2.score {
-                            Text("Congratulations, you won! 🥳")
-                        } else if triviaVM.player1.score < triviaVM.player2.score {
-                            Text("Unlucky, you lost! 👎")
-                        } else {
-                            Text("It's a tie! 😐")
-                        }
+                        //TODO: update this
+//                        Text("\(triviaVM.player2.name) scored \(triviaVM.player2.score) out of \(triviaVM.length)")
+                        
+//                        if triviaVM.player1.score > triviaVM.player2.score {
+//                            Text("Congratulations, you won! 🥳")
+//                        } else if triviaVM.player1.score < triviaVM.player2.score {
+//                            Text("Unlucky, you lost! 👎")
+//                        } else {
+//                            Text("It's a tie! 😐")
+//                        }
                         
                     }
                     

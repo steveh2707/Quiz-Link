@@ -49,24 +49,27 @@ struct QuestionView: View {
                 }
             }
             .buttonStyle(.borderedProminent)
-            .disabled( triviaVM.gameType == .peer ?
-                       triviaVM.player1.answer == nil || triviaVM.player2.answer == nil :
-                        triviaVM.player1.answer == nil
+            .disabled(
+//                triviaVM.gameType == .peer ?
+//                       triviaVM.player1.answer == nil || triviaVM.player2.answer == nil :
+//                        triviaVM.player1.answer == nil
+                !triviaVM.allPlayersAnswered
             )
             Spacer()
             
-            HStack {
-                VStack {
-                    Text(triviaVM.player1.name)
-                    Text("\(triviaVM.player1.score)")
-                }
-                if triviaVM.gameType == .peer {
-                    VStack {
-                        Text(triviaVM.player2.name)
-                        Text("\(triviaVM.player2.score)")
-                    }
-                }
-            }
+            //TODO: Add score
+//            HStack {
+//                VStack {
+//                    Text(triviaVM.player1.name)
+//                    Text("\(triviaVM.player1.score)")
+//                }
+//                if triviaVM.gameType == .peer {
+//                    VStack {
+//                        Text(triviaVM.player2.name)
+//                        Text("\(triviaVM.player2.score)")
+//                    }
+//                }
+//            }
         }
         .onAppear {
             if triviaVM.gameType == .single || triviaVM.host {
@@ -74,7 +77,7 @@ struct QuestionView: View {
                     await triviaVM.fetchTrivia()
                     
                     if triviaVM.gameType == .peer {
-                        let gameMove = MPGameMove(action: .start, playerName: triviaVM.player1.name, questionSet: triviaVM.trivia, answer: nil)
+                        let gameMove = MPGameMove(action: .start, playerName: triviaVM.players[0].name, questionSet: triviaVM.trivia, answer: nil)
                         connectionManager.send(gameMove: gameMove)
                     }
                 }

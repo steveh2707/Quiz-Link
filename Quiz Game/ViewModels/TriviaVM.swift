@@ -29,6 +29,7 @@ class TriviaVM: ObservableObject {
     init(yourName: String) {
 //        self.players.append(Player(name: yourName))
 //        _players = StateObject(wrappedValue: [Player(name: yourName)])
+        self.players = [Player(name: yourName)]
         self.yourName = yourName
     }
     
@@ -149,5 +150,36 @@ class TriviaVM: ObservableObject {
 //            }
 //        }
 //
+//    }
+    
+    func findIndexOfPlayer(name: String) -> Int {
+        var index = -1
+        for (i, player) in players.enumerated() {
+            if player.name == name {
+                index = i
+                break
+            }
+        }
+        return index
+    }
+    
+    var allPlayersAnswered: Bool {
+        var allAnswered = true
+        for player in players {
+            if player.answer == nil {
+                allAnswered = false
+            }
+        }
+        return allAnswered
+    }
+    
+//    func allPlayersAnswered() -> Bool {
+//        var allAnswered = true
+//        for player in players {
+//            if player.answer == nil {
+//                allAnswered = false
+//            }
+//        }
+//        return allAnswered
 //    }
 }

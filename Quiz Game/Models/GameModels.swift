@@ -30,7 +30,8 @@ struct Answer: Identifiable, Codable, Equatable {
 }
 
 
-struct Player {
+struct Player: Identifiable {
+    var id: UUID { UUID() }
     var name: String
     var score: Int = 0
     var isWinner: Bool = false
