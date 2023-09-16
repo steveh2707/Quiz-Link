@@ -11,8 +11,9 @@ import SwiftUI
 @MainActor
 class TriviaVM: ObservableObject {
     @Published var gameType: GameType = .single
-    @Published var player1: Player
-    @Published var player2 = Player(name: "Player 2")
+//    @Published var player1: Player
+//    @Published var player2 = Player(name: "Player 2")
+    @Published var players: [Player]
     @Published var host: Bool = false
     
     private(set) var yourName: String
@@ -26,7 +27,8 @@ class TriviaVM: ObservableObject {
     
     
     init(yourName: String) {
-        player1 = Player(name: yourName)
+//        self.players.append(Player(name: yourName))
+//        _players = StateObject(wrappedValue: [Player(name: yourName)])
         self.yourName = yourName
     }
     
@@ -42,16 +44,21 @@ class TriviaVM: ObservableObject {
 
     func reset() {
         simpleReset()
-        self.player1.score = 0
-        self.player1.answer = nil
-        self.player2.score = 0
-        self.player2.answer = nil
+        for i in 0..<players.count {
+            players[i].score = 0
+            players[i].answer = nil
+        }
+//        self.player1.score = 0
+//        self.player1.answer = nil
+//        self.player2.score = 0
+//        self.player2.answer = nil
     }
     
     func endGame() {
         simpleReset()
-        self.player1 = Player(name: yourName)
-        self.player2 = Player(name: "Player 2")
+        players.removeSubrange(1..<players.count)
+//        self.player1 = Player(name: yourName)
+//        self.player2 = Player(name: "Player 2")
     }
     
     
@@ -96,8 +103,11 @@ class TriviaVM: ObservableObject {
     }
     
     private func setQuestion() {
-        player1.answer = nil
-        player2.answer = nil
+//        player1.answer = nil
+//        player2.answer = nil
+        for i in 0..<players.count {
+            players[i].answer = nil
+        }
         progress = CGFloat(Double(index+1) / Double(length) * 350)
         
         if index < length {
@@ -107,44 +117,37 @@ class TriviaVM: ObservableObject {
         }
     }
     
-    func selectAnswer(answer: Answer) {
-//        answerSelected = true
-        if player1.name == yourName {
-            player1.answer = answer
-            if answer.isCorrect {
-                player1.score += 1
-            }
-        } else {
-            player2.answer = answer
-            if answer.isCorrect {
-                player2.score += 1
-            }
-        }
-        
-//        player1.answer = answer
-//        if answer.isCorrect {
-//            player1.score += 1
+    func selectAnswer(index: Int, answer: Answer) {
+//        if player1.name == yourName {
+//            player1.answer = answer
+//            if answer.isCorrect {
+//                player1.score += 1
+//            }
+//        } else {
+//            player2.answer = answer
+//            if answer.isCorrect {
+//                player2.score += 1
+//            }
 //        }
+        
+        players[index].answer = answer
+        if answer.isCorrect {
+            players[index].score += 1
+        }
     }
     
-    func setOpponentAnswer(answer: Answer) {
-        if player1.name == yourName {
-            player2.answer = answer
-            if answer.isCorrect {
-                player2.score += 1
-            }
-        } else {
-            player1.answer = answer
-            if answer.isCorrect {
-                player1.score += 1
-            }
-        }
-        
-        
-        
-//        player2.answer = answer
-//        if answer.isCorrect {
-//            player2.score += 1
+//    func setOpponentAnswer(answer: Answer) {
+//        if player1.name == yourName {
+//            player2.answer = answer
+//            if answer.isCorrect {
+//                player2.score += 1
+//            }
+//        } else {
+//            player1.answer = answer
+//            if answer.isCorrect {
+//                player1.score += 1
+//            }
 //        }
-    }
+//
+//    }
 }
