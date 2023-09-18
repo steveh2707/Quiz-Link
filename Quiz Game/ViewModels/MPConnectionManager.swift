@@ -114,6 +114,12 @@ class MPConnectionManager: NSObject, ObservableObject {
             invitationHandler(false, nil)
         }
     }
+    
+    func disconnect() {
+        self.startGame = false
+        self.paired = false
+        self.session.disconnect()
+    }
 }
 
 // Add and remove local peers from availablePeers array
@@ -191,8 +197,7 @@ extension MPConnectionManager: MCSessionDelegate {
                 case .reset:
                     self.game?.reset()
                 case .end:
-                    self.session.disconnect()
-                    self.startGame = false
+                    self.disconnect()
                 }
             }
         }

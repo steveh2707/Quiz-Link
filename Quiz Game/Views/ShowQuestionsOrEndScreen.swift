@@ -41,16 +41,11 @@ struct ShowQuestionsOrEndScreen: View {
                     
                     HStack {
                         Button("Play Again") {
-                            
                             if gameVM.gameType == .peer {
                                 let gameMove = MPGameMove(action: .reset)
                                 connectionManager.send(gameMove: gameMove)
                             }
-                            
-//                            if gameVM.gameType == .single {
-                                gameVM.reset()
-//                            }
-                            //TODO: Play again for .peer
+                            gameVM.reset()
                         }
                         .buttonStyle(.borderedProminent)
                         .foregroundColor(Color.theme.primaryTextInverse)
@@ -59,6 +54,7 @@ struct ShowQuestionsOrEndScreen: View {
                             if gameVM.gameType == .peer {
                                 let gameMove = MPGameMove(action: .end)
                                 connectionManager.send(gameMove: gameMove)
+                                connectionManager.disconnect()
                             } else {
                                 dismiss()
                             }
@@ -81,7 +77,6 @@ struct ShowQuestionsOrEndScreen: View {
             } else {
                 QuestionView()
                     .environmentObject(gameVM)
-
                     .onAppear {
                         gameVM.reset()
                         if gameVM.gameType == .peer {

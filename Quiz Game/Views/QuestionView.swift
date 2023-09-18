@@ -68,6 +68,7 @@ struct QuestionView: View {
                     if gameVM.gameType == .peer {
                         let gameMove = MPGameMove(action: .end)
                         connectionManager.send(gameMove: gameMove)
+                        connectionManager.disconnect()
                     } else {
                         dismiss()
                     }
