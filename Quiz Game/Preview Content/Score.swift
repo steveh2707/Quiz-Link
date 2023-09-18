@@ -13,7 +13,7 @@ struct Score: View {
     var body: some View {
         VStack {
             Text(player.name)
-                .font(.title3)
+                .font(.headline)
             
             Text("\(player.score)")
                 .font(.headline)

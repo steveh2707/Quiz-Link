@@ -30,17 +30,18 @@ class MPConnectionManager: NSObject, ObservableObject {
     
     @Published var paired: Bool = false
     
-    var startGame: Bool = false {
-        didSet {
-            if startGame {
-                isAvailableToPlay = false
-            } else {
-                isAvailableToPlay = true
-            }
-        }
-    }
+    @Published var playing: Bool = false
+//    {
+//        didSet {
+//            if playing {
+//                isAvailableToPlay = false
+//            } else {
+//                isAvailableToPlay = true
+//            }
+//        }
+//    }
     
-    var isAvailableToPlay: Bool = false {
+    @Published var isAvailableToPlay: Bool = false {
         didSet {
             if isAvailableToPlay {
                 startAdvertising()
@@ -115,8 +116,14 @@ class MPConnectionManager: NSObject, ObservableObject {
         }
     }
     
-    func disconnect() {
-        self.startGame = false
+    func startGame() {
+        self.isAvailableToPlay = false
+        self.playing = true
+    }
+    
+    func endGame() {
+        self.isAvailableToPlay = true
+        self.playing = false
         self.paired = false
         self.session.disconnect()
     }
@@ -136,7 +143,9 @@ extension MPConnectionManager: MCNearbyServiceBrowserDelegate {
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
         guard let index = availablePeers.firstIndex(of: peerID) else { return }
         DispatchQueue.main.async {
-            self.availablePeers.remove(at: index)
+            if index < self.availablePeers.count {
+                self.availablePeers.remove(at: index)
+            }
         }
     }
 }
@@ -161,7 +170,8 @@ extension MPConnectionManager: MCSessionDelegate {
         case .notConnected:
             DispatchQueue.main.async {
                 self.paired = false
-                self.startGame = false
+                self.playing = false
+                self.isAvailableToPlay = true
             }
         case .connected:
             DispatchQueue.main.async {
@@ -170,6 +180,7 @@ extension MPConnectionManager: MCSessionDelegate {
         default:
             DispatchQueue.main.async {
                 self.paired = false
+                self.playing = false
                 self.isAvailableToPlay = true
             }
         }
@@ -182,7 +193,7 @@ extension MPConnectionManager: MCSessionDelegate {
             DispatchQueue.main.async {
                 switch gameMove.action {
                 case .start:
-                    self.startGame = true
+                    self.startGame()
                 case .questions:
                     self.game?.setTrivia(questions: gameMove.questionSet)
                 case .move:
@@ -197,7 +208,7 @@ extension MPConnectionManager: MCSessionDelegate {
                 case .reset:
                     self.game?.reset()
                 case .end:
-                    self.disconnect()
+                    self.endGame()
                 }
             }
         }

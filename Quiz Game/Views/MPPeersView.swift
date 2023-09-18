@@ -20,27 +20,24 @@ struct MPPeersView: View {
                     .font(.title2)
                 if connectionManager.availablePeers.isEmpty {
                     ProgressView()
+                        .padding()
                 }
                 ForEach(connectionManager.availablePeers, id: \.self) { peer in
-                    if !connectionManager.session.connectedPeers.contains(peer) {
-                        HStack {
-                            Text(peer.displayName)
-                            Spacer()
-                            Button("Select") {
+                    HStack {
+                        Text(peer.displayName)
+                        Spacer()
+                        if !connectionManager.session.connectedPeers.contains(peer) {
+                            Button("Connect") {
                                 connectionManager.invitePeer(peer: peer, game: gameVM)
                             }
                             .buttonStyle(.borderedProminent)
+                        } else {
+                            Button("Disconnect") {
+                                connectionManager.endGame()
+                            }
+                            .buttonStyle(.bordered)
                         }
-                    }
-                }
-            }
-            
-            if connectionManager.session.connectedPeers.count > 0 {
-                VStack {
-                    Text("Connected Players")
-                        .font(.title3)
-                    ForEach(connectionManager.session.connectedPeers, id: \.self) { connected in
-                        Text(connected.displayName)
+                        
                     }
                 }
             }
@@ -49,7 +46,7 @@ struct MPPeersView: View {
                 gameVM.players[0].isHost = true
                 let gameMove = MPGameMove(action: .start)
                 connectionManager.send(gameMove: gameMove)
-                connectionManager.startGame = true
+                connectionManager.startGame()
             }
             .buttonStyle(.borderedProminent)
             .disabled(connectionManager.session.connectedPeers.count == 0)
@@ -70,8 +67,9 @@ struct MPPeersView: View {
         }
         .onDisappear {
             connectionManager.isAvailableToPlay = false
+            connectionManager.endGame()
         }
-        .onChange(of: connectionManager.startGame) { newValue in
+        .onChange(of: connectionManager.playing) { newValue in
             if newValue {
                 for player in connectionManager.session.connectedPeers {
                     gameVM.players.append(Player(name: player.displayName))

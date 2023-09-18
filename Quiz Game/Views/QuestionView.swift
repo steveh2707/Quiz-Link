@@ -39,7 +39,6 @@ struct QuestionView: View {
                 ForEach(gameVM.answerChoices, id: \.id) { answer in
                     AnswerRow(answer: answer)
                 }
-                
             }
             
             Button("Next") {
@@ -54,9 +53,11 @@ struct QuestionView: View {
             
             Spacer(minLength: 0)
             
-            HStack {
-                ForEach(gameVM.players) { player in
-                    Score(player: player)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                    ForEach(gameVM.players) { player in
+                        Score(player: player)
+                    }
                 }
             }
             Spacer(minLength: 0)
@@ -68,15 +69,27 @@ struct QuestionView: View {
                     if gameVM.gameType == .peer {
                         let gameMove = MPGameMove(action: .end)
                         connectionManager.send(gameMove: gameMove)
-                        connectionManager.disconnect()
+                        connectionManager.endGame()
                     } else {
                         dismiss()
                     }
                 }
                 .buttonStyle(.bordered)
             }
+            ToolbarItem(placement: .navigationBarLeading) {
+                if !gameVM.trivia.isEmpty {
+                    HStack {
+                        Image(systemName: "clock")
+                        Text("\(gameVM.remainingTime)")
+                            .font(.title2)
+                    }
+                    .foregroundColor(.theme.accent)
+                }
+            }
         }
+
         .onAppear {
+            gameVM.remainingTime = maxRemainingTime
             if gameVM.gameType == .single || gameVM.players[0].isHost {
                 Task {
                     await gameVM.fetchTrivia()
@@ -88,12 +101,12 @@ struct QuestionView: View {
                 }
             }
         }
-        .onChange(of: connectionManager.startGame, perform: { newValue in
-            if !newValue {
-                gameVM.players[0].isHost = false
-                dismiss()
+        .onReceive(gameVM.countdownTimer) { _ in
+            gameVM.remainingTime -= 1
+            if gameVM.remainingTime == 0 {
+                gameVM.goToNextQuestion()
             }
-        })
+        }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.theme.background)

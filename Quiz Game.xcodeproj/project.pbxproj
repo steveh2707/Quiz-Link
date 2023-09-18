@@ -24,7 +24,6 @@
 		AA005D042AB31A69005AB524 /* GameVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D032AB31A69005AB524 /* GameVM.swift */; };
 		AA005D072AB34EB9005AB524 /* YourNameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D062AB34EB9005AB524 /* YourNameView.swift */; };
 		AA005D0B2AB352C4005AB524 /* MPConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D0A2AB352C4005AB524 /* MPConnectionManager.swift */; };
-		AA005D0D2AB35751005AB524 /* MPGameMove.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D0C2AB35751005AB524 /* MPGameMove.swift */; };
 		AA005D0F2AB36195005AB524 /* MPPeersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D0E2AB36195005AB524 /* MPPeersView.swift */; };
 		AA005D112AB754BA005AB524 /* Score.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D102AB754BA005AB524 /* Score.swift */; };
 /* End PBXBuildFile section */
@@ -49,7 +48,6 @@
 		AA005D062AB34EB9005AB524 /* YourNameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YourNameView.swift; sourceTree = "<group>"; };
 		AA005D082AB35202005AB524 /* Quiz-Game-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Quiz-Game-Info.plist"; sourceTree = SOURCE_ROOT; };
 		AA005D0A2AB352C4005AB524 /* MPConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPConnectionManager.swift; sourceTree = "<group>"; };
-		AA005D0C2AB35751005AB524 /* MPGameMove.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPGameMove.swift; sourceTree = "<group>"; };
 		AA005D0E2AB36195005AB524 /* MPPeersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPPeersView.swift; sourceTree = "<group>"; };
 		AA005D102AB754BA005AB524 /* Score.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Score.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -113,7 +111,6 @@
 			children = (
 				AA005CE72AB30041005AB524 /* GameModels.swift */,
 				AA005CFC2AB314DC005AB524 /* Trivia.swift */,
-				AA005D0C2AB35751005AB524 /* MPGameMove.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -244,7 +241,6 @@
 				AA005CFB2AB313BE005AB524 /* ShowQuestionsOrEndScreen.swift in Sources */,
 				AA005CE82AB30041005AB524 /* GameModels.swift in Sources */,
 				AA005CF42AB30BA1005AB524 /* QuestionView.swift in Sources */,
-				AA005D0D2AB35751005AB524 /* MPGameMove.swift in Sources */,
 				AA005D072AB34EB9005AB524 /* YourNameView.swift in Sources */,
 				AA005D112AB754BA005AB524 /* Score.swift in Sources */,
 				AA005CD92AB1F28C005AB524 /* AppEntry.swift in Sources */,

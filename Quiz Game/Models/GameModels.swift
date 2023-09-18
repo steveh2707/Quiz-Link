@@ -37,3 +37,23 @@ struct Player: Identifiable, Codable {
     var isHost: Bool = false
     var answer: Answer? = nil
 }
+
+
+struct MPGameMove: Codable {
+    enum Action: Int, Codable {
+        case start, questions, move, next, reset, end
+    }
+    
+    let action: Action
+    var players: [Player] = []
+    var playerName: String? = nil
+    var questionSet: [Trivia.Question] = []
+    var answer: Answer? = nil
+    
+    
+    func data() -> Data? {
+        try? JSONEncoder().encode(self)
+    }
+}
+
+let maxRemainingTime = 10

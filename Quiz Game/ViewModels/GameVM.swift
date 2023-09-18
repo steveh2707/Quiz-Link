@@ -8,6 +8,8 @@
 import Foundation
 import SwiftUI
 
+
+
 @MainActor
 class GameVM: ObservableObject {
     @Published var gameType: GameType = .single
@@ -24,7 +26,9 @@ class GameVM: ObservableObject {
     @Published private(set) var question: AttributedString = ""
     @Published private(set) var answerChoices: [Answer] = []
     @Published private(set) var progress: CGFloat = 0.00
+    @Published var remainingTime = maxRemainingTime
     
+    let countdownTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     init(yourName: String) {
         self.players = [Player(name: yourName)]
@@ -39,25 +43,20 @@ class GameVM: ObservableObject {
         self.question = ""
         self.answerChoices = []
         self.progress = 0.00
+        self.remainingTime = maxRemainingTime
     }
 
     func reset() {
-        simpleReset()
+        self.simpleReset()
         for i in 0..<players.count {
             players[i].score = 0
             players[i].answer = nil
         }
-//        self.player1.score = 0
-//        self.player1.answer = nil
-//        self.player2.score = 0
-//        self.player2.answer = nil
     }
     
     func endGame() {
-        simpleReset()
+        self.simpleReset()
         players.removeSubrange(1..<players.count)
-//        self.player1 = Player(name: yourName)
-//        self.player2 = Player(name: "Player 2")
     }
     
     
@@ -102,14 +101,13 @@ class GameVM: ObservableObject {
     }
     
     private func setQuestion() {
-//        player1.answer = nil
-//        player2.answer = nil
         for i in 0..<players.count {
             players[i].answer = nil
         }
         progress = CGFloat(Double(index+1) / Double(length) * 350)
         
         if index < length {
+            remainingTime = maxRemainingTime
             let currentTriviaQuesiton = trivia[index]
             question = currentTriviaQuesiton.formattedQuestion
             answerChoices = currentTriviaQuesiton.answers
@@ -117,17 +115,6 @@ class GameVM: ObservableObject {
     }
     
     func selectAnswer(index: Int, answer: Answer) {
-//        if player1.name == yourName {
-//            player1.answer = answer
-//            if answer.isCorrect {
-//                player1.score += 1
-//            }
-//        } else {
-//            player2.answer = answer
-//            if answer.isCorrect {
-//                player2.score += 1
-//            }
-//        }
         
         players[index].answer = answer
         if answer.isCorrect {
@@ -135,20 +122,6 @@ class GameVM: ObservableObject {
         }
     }
     
-//    func setOpponentAnswer(answer: Answer) {
-//        if player1.name == yourName {
-//            player2.answer = answer
-//            if answer.isCorrect {
-//                player2.score += 1
-//            }
-//        } else {
-//            player1.answer = answer
-//            if answer.isCorrect {
-//                player1.score += 1
-//            }
-//        }
-//
-//    }
     
     func findIndexOfPlayer(name: String) -> Int {
         for (i, player) in players.enumerated() {
@@ -168,14 +141,5 @@ class GameVM: ObservableObject {
         }
         return allAnswered
     }
-    
-//    func allPlayersAnswered() -> Bool {
-//        var allAnswered = true
-//        for player in players {
-//            if player.answer == nil {
-//                allAnswered = false
-//            }
-//        }
-//        return allAnswered
-//    }
+
 }

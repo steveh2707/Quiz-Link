@@ -54,7 +54,7 @@ struct ShowQuestionsOrEndScreen: View {
                             if gameVM.gameType == .peer {
                                 let gameMove = MPGameMove(action: .end)
                                 connectionManager.send(gameMove: gameMove)
-                                connectionManager.disconnect()
+                                connectionManager.endGame()
                             } else {
                                 dismiss()
                             }
@@ -63,12 +63,6 @@ struct ShowQuestionsOrEndScreen: View {
                     }
 
                 }
-                .onChange(of: connectionManager.startGame, perform: { newValue in
-                    if !newValue {
-                        gameVM.players[0].isHost = false
-                        dismiss()
-                    }
-                })
                 .foregroundColor(Color.theme.accent)
                 .padding()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -86,6 +80,12 @@ struct ShowQuestionsOrEndScreen: View {
             }
 
         }
+        .onChange(of: connectionManager.playing, perform: { newValue in
+            if !newValue {
+                gameVM.players[0].isHost = false
+                dismiss()
+            }
+        })
     }
 }
 
