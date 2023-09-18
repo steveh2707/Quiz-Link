@@ -30,10 +30,10 @@ struct Answer: Identifiable, Codable, Equatable {
 }
 
 
-struct Player: Identifiable {
+struct Player: Identifiable, Codable {
     var id: UUID { UUID() }
     var name: String
     var score: Int = 0
-    var isWinner: Bool = false
+    var isHost: Bool = false
     var answer: Answer? = nil
 }

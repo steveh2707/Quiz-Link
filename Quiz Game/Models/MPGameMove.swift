@@ -9,10 +9,11 @@ import Foundation
 
 struct MPGameMove: Codable {
     enum Action: Int, Codable {
-        case start, move, next, end
+        case start, questions, move, next, reset, end
     }
     
     let action: Action
+    var players: [Player] = []
     var playerName: String? = nil
     var questionSet: [Trivia.Question] = []
     var answer: Answer? = nil

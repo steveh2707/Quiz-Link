@@ -11,53 +11,68 @@ struct ShowQuestionsOrEndScreen: View {
 
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var connectionManager: MPConnectionManager
-    @EnvironmentObject var triviaVM: TriviaVM
+    @EnvironmentObject var gameVM: GameVM
     
     var body: some View {
         NavigationStack {
-            if triviaVM.reachedEnd {
+            if gameVM.reachedEnd {
                 VStack(spacing: 20) {
                     Text("Quiz Game")
                         .accentTitle()
                     
-                    if triviaVM.gameType == .single {
+                    if gameVM.gameType == .single {
                         Text("Congratulations, you completed the game! 🥳")
                             .multilineTextAlignment(.center)
                         
-                        Text("You scored \(triviaVM.players[0].score) out of \(triviaVM.length)")
-                    } else if triviaVM.gameType == .peer {
+                        Text("You scored \(gameVM.players[0].score) out of \(gameVM.length)")
+                    } else if gameVM.gameType == .peer {
                         
-                        Text("You scored \(triviaVM.players[0].score) out of \(triviaVM.length)")
+                        Text("You scored \(gameVM.players[0].score) out of \(gameVM.length)")
                         
-                        //TODO: update this
-//                        Text("\(triviaVM.player2.name) scored \(triviaVM.player2.score) out of \(triviaVM.length)")
-                        
-//                        if triviaVM.player1.score > triviaVM.player2.score {
-//                            Text("Congratulations, you won! 🥳")
-//                        } else if triviaVM.player1.score < triviaVM.player2.score {
-//                            Text("Unlucky, you lost! 👎")
-//                        } else {
-//                            Text("It's a tie! 😐")
-//                        }
-                        
+                        Text("Ranking")
+                            .font(.title2)
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(gameVM.players.sorted{ $0.score > $1.score }) { player in
+                                Text("\(player.name): \(player.score)")
+                            }
+                        }
+                                                
                     }
                     
                     HStack {
                         Button("Play Again") {
-                            if triviaVM.gameType == .single {
-                                triviaVM.reset()
+                            
+                            if gameVM.gameType == .peer {
+                                let gameMove = MPGameMove(action: .reset)
+                                connectionManager.send(gameMove: gameMove)
                             }
+                            
+//                            if gameVM.gameType == .single {
+                                gameVM.reset()
+//                            }
+                            //TODO: Play again for .peer
                         }
                         .buttonStyle(.borderedProminent)
                         .foregroundColor(Color.theme.primaryTextInverse)
                         
                         Button("Quit Game") {
-                            dismiss()
+                            if gameVM.gameType == .peer {
+                                let gameMove = MPGameMove(action: .end)
+                                connectionManager.send(gameMove: gameMove)
+                            } else {
+                                dismiss()
+                            }
                         }
                         .buttonStyle(.bordered)
                     }
 
                 }
+                .onChange(of: connectionManager.startGame, perform: { newValue in
+                    if !newValue {
+                        gameVM.players[0].isHost = false
+                        dismiss()
+                    }
+                })
                 .foregroundColor(Color.theme.accent)
                 .padding()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -65,23 +80,12 @@ struct ShowQuestionsOrEndScreen: View {
             
             } else {
                 QuestionView()
-                    .environmentObject(triviaVM)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("End Game") {
-                                if triviaVM.gameType == .peer {
-                                    let gameMove = MPGameMove(action: .end, playerName: nil, questionSet: [], answer: nil)
-                                    connectionManager.send(gameMove: gameMove)
-                                }
-                                dismiss()
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                    }
+                    .environmentObject(gameVM)
+
                     .onAppear {
-                        triviaVM.reset()
-                        if triviaVM.gameType == .peer {
-                            connectionManager.setup(game: triviaVM)
+                        gameVM.reset()
+                        if gameVM.gameType == .peer {
+                            connectionManager.setup(game: gameVM)
                         }
                     }
             }

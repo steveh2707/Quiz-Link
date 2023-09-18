@@ -9,12 +9,12 @@ import Foundation
 import SwiftUI
 
 @MainActor
-class TriviaVM: ObservableObject {
+class GameVM: ObservableObject {
     @Published var gameType: GameType = .single
-//    @Published var player1: Player
-//    @Published var player2 = Player(name: "Player 2")
     @Published var players: [Player]
     @Published var host: Bool = false
+    
+    @Published var startGame: Bool = false
     
     private(set) var yourName: String
     private(set) var trivia: [Trivia.Question] = []
@@ -27,8 +27,6 @@ class TriviaVM: ObservableObject {
     
     
     init(yourName: String) {
-//        self.players.append(Player(name: yourName))
-//        _players = StateObject(wrappedValue: [Player(name: yourName)])
         self.players = [Player(name: yourName)]
         self.yourName = yourName
     }
@@ -153,14 +151,12 @@ class TriviaVM: ObservableObject {
 //    }
     
     func findIndexOfPlayer(name: String) -> Int {
-        var index = -1
         for (i, player) in players.enumerated() {
             if player.name == name {
-                index = i
-                break
+                return i
             }
         }
-        return index
+        return -1
     }
     
     var allPlayersAnswered: Bool {

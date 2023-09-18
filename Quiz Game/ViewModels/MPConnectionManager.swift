@@ -17,9 +17,9 @@ class MPConnectionManager: NSObject, ObservableObject {
     let myPeerId: MCPeerID
     let nearbyServiceAdvertiser: MCNearbyServiceAdvertiser
     let nearbyServiceBrowser: MCNearbyServiceBrowser
-    var game: TriviaVM?
+    var game: GameVM?
     
-    func setup(game: TriviaVM) {
+    func setup(game: GameVM) {
         self.game = game
     }
     
@@ -27,7 +27,18 @@ class MPConnectionManager: NSObject, ObservableObject {
     @Published var receivedInvite: Bool = false
     @Published var receivedInviteFrom: MCPeerID?
     @Published var invitationHandler: ((Bool, MCSession?) -> Void)?
+    
     @Published var paired: Bool = false
+    
+    var startGame: Bool = false {
+        didSet {
+            if startGame {
+                isAvailableToPlay = false
+            } else {
+                isAvailableToPlay = true
+            }
+        }
+    }
     
     var isAvailableToPlay: Bool = false {
         didSet {
@@ -87,25 +98,14 @@ class MPConnectionManager: NSObject, ObservableObject {
     }
     
     @MainActor
-    func invitePeer(peer: MCPeerID, game: TriviaVM) {
-        game.gameType = .peer
+    func invitePeer(peer: MCPeerID, game: GameVM) {
         nearbyServiceBrowser.invitePeer(peer, to: session, withContext: nil, timeout: 30)
-//        game.player1.name = myPeerId.displayName
-//        game.player2.name = peer.displayName
-        game.players[0].name = myPeerId.displayName
-        game.players.append(Player(name: peer.displayName))
-        game.host = true
     }
     
     @MainActor
-    func acceptInvite(game: TriviaVM) {
+    func acceptInvite(game: GameVM) {
         if let invitationHandler = invitationHandler {
             invitationHandler(true, session)
-//            game.player1.name = myPeerId.displayName
-//            game.player2.name = receivedInviteFrom?.displayName ?? "Unknown"
-            game.players[0].name = myPeerId.displayName
-            game.players.append(Player(name: receivedInviteFrom?.displayName ?? "Unknown"))
-            game.gameType = .peer
         }
     }
     
@@ -155,13 +155,11 @@ extension MPConnectionManager: MCSessionDelegate {
         case .notConnected:
             DispatchQueue.main.async {
                 self.paired = false
-                self.isAvailableToPlay = true
+                self.startGame = false
             }
         case .connected:
             DispatchQueue.main.async {
                 self.paired = true
-//                self.isAvailableToPlay = false
-//                self.availablePeers = []
             }
         default:
             DispatchQueue.main.async {
@@ -178,6 +176,8 @@ extension MPConnectionManager: MCSessionDelegate {
             DispatchQueue.main.async {
                 switch gameMove.action {
                 case .start:
+                    self.startGame = true
+                case .questions:
                     self.game?.setTrivia(questions: gameMove.questionSet)
                 case .move:
                     if let answer = gameMove.answer, let name = gameMove.playerName {
@@ -185,13 +185,14 @@ extension MPConnectionManager: MCSessionDelegate {
                         if let i, i > -1 {
                             self.game?.selectAnswer(index: i, answer: answer)
                         }
-//                        self.game?.setOpponentAnswer(answer: answer)
                     }
                 case .next:
                     self.game?.goToNextQuestion()
+                case .reset:
+                    self.game?.reset()
                 case .end:
                     self.session.disconnect()
-                    self.isAvailableToPlay = true
+                    self.startGame = false
                 }
             }
         }

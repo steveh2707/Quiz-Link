@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AnswerRow: View {
-    @EnvironmentObject var triviaManager: TriviaVM
+    @EnvironmentObject var gameVM: GameVM
     @EnvironmentObject var connectionManager: MPConnectionManager
     var answer: Answer
     @State private var isSelected = false
@@ -24,7 +24,7 @@ struct AnswerRow: View {
                 Spacer()
                 Image(systemName: answer.isCorrect ? "checkmark.circle.fill" : "x.circle.fill")
                     .foregroundColor(answer.isCorrect ? .green : .red)
-            } else if triviaManager.players[0].answer != nil && answer.isCorrect {
+            } else if gameVM.players[0].answer != nil && answer.isCorrect {
                 Spacer()
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
@@ -32,15 +32,15 @@ struct AnswerRow: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .foregroundColor(triviaManager.players[0].answer == answer ? (isSelected ? Color.theme.accent : .gray) : Color.theme.accent)
+        .foregroundColor(gameVM.players[0].answer == answer ? (isSelected ? Color.theme.accent : .gray) : Color.theme.accent)
         .background(Color.theme.backgroundSecondary)
         .cornerRadius(10)
-        .shadow(color: isSelected ? (answer.isCorrect ? .green : .red) : (triviaManager.players[0].answer != nil && answer.isCorrect ? .green : .gray), radius: 5, x: 0.5, y: 0.5)
+        .shadow(color: isSelected ? (answer.isCorrect ? .green : .red) : (gameVM.players[0].answer != nil && answer.isCorrect ? .green : .gray), radius: 5, x: 0.5, y: 0.5)
         .onTapGesture {
-            if triviaManager.players[0].answer == nil {
+            if gameVM.players[0].answer == nil {
                 isSelected = true
-                triviaManager.selectAnswer(index: 0, answer: answer)
-                if triviaManager.gameType == .peer {
+                gameVM.selectAnswer(index: 0, answer: answer)
+                if gameVM.gameType == .peer {
                     let gameMove = MPGameMove(action: .move, playerName: connectionManager.myPeerId.displayName, questionSet: [], answer: answer)
                     connectionManager.send(gameMove: gameMove)
                 }
@@ -53,6 +53,6 @@ struct AnswerRow: View {
 struct AnswerRow_Previews: PreviewProvider {
     static var previews: some View {
         AnswerRow(answer: Answer(text: "Single", isCorrect: true))
-            .environmentObject(TriviaVM(yourName: "Sample"))
+            .environmentObject(GameVM(yourName: "Sample"))
     }
 }

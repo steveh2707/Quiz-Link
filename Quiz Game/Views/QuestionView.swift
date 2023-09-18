@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct QuestionView: View {
-    @EnvironmentObject var triviaVM: TriviaVM
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var gameVM: GameVM
     @EnvironmentObject var connectionManager: MPConnectionManager
     
     var body: some View {
-        VStack(spacing: 40) {
+        VStack(spacing: 20) {
             
             HStack {
                 Text("Quiz Game")
@@ -20,69 +21,78 @@ struct QuestionView: View {
                 
                 Spacer()
                 
-                Text("\(triviaVM.index+1) out of \(triviaVM.length)")
+                Text("\(gameVM.index+1) out of \(gameVM.length)")
                     .foregroundColor(Color.theme.accent)
                     .fontWeight(.heavy)
             }
             
-            ProgressBar(progress: triviaVM.progress)
+            ProgressBar(progress: gameVM.progress)
             
             VStack(alignment: .leading, spacing: 20) {
-                Text(triviaVM.question)
+                Text(gameVM.question)
                     .font(.system(size: 20))
                     .bold()
                     .foregroundColor(.theme.secondaryText)
                     .padding(.bottom)
                     .fixedSize(horizontal: false, vertical: true)
                 
-                ForEach(triviaVM.answerChoices, id: \.id) { answer in
+                ForEach(gameVM.answerChoices, id: \.id) { answer in
                     AnswerRow(answer: answer)
                 }
                 
             }
             
             Button("Next") {
-                triviaVM.goToNextQuestion()
-                if triviaVM.gameType == .peer {
+                gameVM.goToNextQuestion()
+                if gameVM.gameType == .peer {
                     let gameMove = MPGameMove(action: .next)
                     connectionManager.send(gameMove: gameMove)
                 }
             }
             .buttonStyle(.borderedProminent)
-            .disabled(
-//                triviaVM.gameType == .peer ?
-//                       triviaVM.player1.answer == nil || triviaVM.player2.answer == nil :
-//                        triviaVM.player1.answer == nil
-                !triviaVM.allPlayersAnswered
-            )
-            Spacer()
+            .disabled(!gameVM.allPlayersAnswered)
             
-            //TODO: Add score
-//            HStack {
-//                VStack {
-//                    Text(triviaVM.player1.name)
-//                    Text("\(triviaVM.player1.score)")
-//                }
-//                if triviaVM.gameType == .peer {
-//                    VStack {
-//                        Text(triviaVM.player2.name)
-//                        Text("\(triviaVM.player2.score)")
-//                    }
-//                }
-//            }
+            Spacer(minLength: 0)
+            
+            HStack {
+                ForEach(gameVM.players) { player in
+                    Score(player: player)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("End Game") {
+                    if gameVM.gameType == .peer {
+                        let gameMove = MPGameMove(action: .end)
+                        connectionManager.send(gameMove: gameMove)
+                    } else {
+                        dismiss()
+                    }
+                }
+                .buttonStyle(.bordered)
+            }
         }
         .onAppear {
-            if triviaVM.gameType == .single || triviaVM.host {
+            if gameVM.gameType == .single || gameVM.players[0].isHost {
                 Task {
-                    await triviaVM.fetchTrivia()
+                    await gameVM.fetchTrivia()
                     
-                    if triviaVM.gameType == .peer {
-                        let gameMove = MPGameMove(action: .start, playerName: triviaVM.players[0].name, questionSet: triviaVM.trivia, answer: nil)
+                    if gameVM.gameType == .peer {
+                        let gameMove = MPGameMove(action: .questions, questionSet: gameVM.trivia)
                         connectionManager.send(gameMove: gameMove)
                     }
                 }
             }
         }
+        .onChange(of: connectionManager.startGame, perform: { newValue in
+            if !newValue {
+                gameVM.players[0].isHost = false
+                dismiss()
+            }
+        })
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.theme.background)
@@ -92,6 +102,6 @@ struct QuestionView: View {
 struct QuestionView_Previews: PreviewProvider {
     static var previews: some View {
         QuestionView()
-            .environmentObject(TriviaVM(yourName: "Test"))
+            .environmentObject(GameVM(yourName: "Test"))
     }
 }
