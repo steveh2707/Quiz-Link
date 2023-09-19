@@ -10,7 +10,7 @@ import SwiftUI
 struct QuestionView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var gameVM: GameVM
-    @EnvironmentObject var connectionManager: MPConnectionManager
+//    @EnvironmentObject var connectionManager: MPConnectionManager
     
     var body: some View {
         VStack(spacing: 20) {
@@ -45,7 +45,11 @@ struct QuestionView: View {
                 gameVM.goToNextQuestion()
                 if gameVM.gameType == .peer {
                     let gameMove = MPGameMove(action: .next)
-                    connectionManager.send(gameMove: gameMove)
+                    gameVM.MPsendMove(gameMove: gameMove)
+                }
+                if gameVM.gameType == .online {
+                    let gameMove = MPGameMove(action: .next)
+                    gameVM.GKsendMove(gameMove: gameMove)
                 }
             }
             .buttonStyle(.borderedProminent)
@@ -68,8 +72,12 @@ struct QuestionView: View {
                 Button("End Game") {
                     if gameVM.gameType == .peer {
                         let gameMove = MPGameMove(action: .end)
-                        connectionManager.send(gameMove: gameMove)
-                        connectionManager.endGame()
+                        gameVM.MPsendMove(gameMove: gameMove)
+                        gameVM.MPendGame()
+                    } else if gameVM.gameType == .online {
+                        let gameMove = MPGameMove(action: .end)
+                        gameVM.GKsendMove(gameMove: gameMove)
+                        gameVM.MPendGame()
                     } else {
                         dismiss()
                     }
@@ -96,14 +104,19 @@ struct QuestionView: View {
                     
                     if gameVM.gameType == .peer {
                         let gameMove = MPGameMove(action: .questions, questionSet: gameVM.trivia)
-                        connectionManager.send(gameMove: gameMove)
+                        gameVM.MPsendMove(gameMove: gameMove)
+                    }
+                    if gameVM.gameType == .online {
+                        let gameMove = MPGameMove(action: .questions, questionSet: gameVM.trivia)
+                        gameVM.GKsendMove(gameMove: gameMove)
                     }
                 }
-            } else if gameVM.gameType == .online {
-                Task {
-                    await gameVM.fetchTrivia()
-                }
-            }
+            } 
+//            else if gameVM.gameType == .online {
+//                Task {
+//                    await gameVM.fetchTrivia()
+//                }
+//            }
         }
         .onReceive(gameVM.countdownTimer) { _ in
             gameVM.remainingTime -= 1

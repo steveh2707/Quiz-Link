@@ -11,16 +11,17 @@ struct StartView: View {
     
 
     @StateObject private var gameVM: GameVM
-    @StateObject private var mpConnectionManager: MPConnectionManager
-    @StateObject private var gkConnectionManager = GKConnectionManager()
+//    @StateObject private var mpConnectionManager: MPConnectionManager
+//    @StateObject private var gkConnectionManager = GKConnectionManager()
+//    @StateObject private var mpConnectionManager: MPGameVM
     
     @AppStorage("yourName") var yourName = ""
     @State private var startGame = false
     
     init(yourName: String) {
         self.yourName = yourName
-        self._mpConnectionManager = StateObject(wrappedValue: MPConnectionManager(yourName: yourName))
         self._gameVM = StateObject(wrappedValue: GameVM(yourName: yourName))
+//        self._gameVM = StateObject(wrappedValue: GameVM(yourName: yourName))
     }
     
     var body: some View {
@@ -56,14 +57,14 @@ struct StartView: View {
                         Spacer()
                     case .peer:
                         MPPeersView(startGame: $startGame)
-                            .environmentObject(mpConnectionManager)
                             .environmentObject(gameVM)
+//                            .environmentObject(gameVM)
                     case .online:
                         GKPeersView(startGame: $startGame)
-                            .environmentObject(gkConnectionManager)
+//                            .environmentObject(gkConnectionManager)
                             .environmentObject(gameVM)
                             .onAppear {
-                                gkConnectionManager.authenticateUser()
+                                gameVM.authenticateUser()
                             }
                     }
                 }
@@ -84,18 +85,18 @@ struct StartView: View {
             .background(Color.theme.background)
             .fullScreenCover(isPresented: $startGame) {
                 ShowQuestionsOrEndScreen()
-                    .environmentObject(mpConnectionManager)
                     .environmentObject(gameVM)
+//                    .environmentObject(gameVM)
                     .onDisappear {
                         gameVM.endGame()
                     }
             }
-            .onChange(of: gameVM.gameType) { newGameType in
-                if newGameType != .peer {
-//                    connectionManager.isAvailableToPlay = false
-                    mpConnectionManager.stopAdvertisingAndBrowsing()
-                }
-            }
+//            .onChange(of: gameVM.gameType) { newGameType in
+//                if newGameType != .peer {
+////                    connectionManager.isAvailableToPlay = false
+//                    mpConnectionManager.stopAdvertisingAndBrowsing()
+//                }
+//            }
         }
     }
 }

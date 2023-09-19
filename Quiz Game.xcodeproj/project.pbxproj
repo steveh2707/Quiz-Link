@@ -26,7 +26,8 @@
 		AA005D0B2AB352C4005AB524 /* MPConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D0A2AB352C4005AB524 /* MPConnectionManager.swift */; };
 		AA005D0F2AB36195005AB524 /* MPPeersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D0E2AB36195005AB524 /* MPPeersView.swift */; };
 		AA005D112AB754BA005AB524 /* Score.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA005D102AB754BA005AB524 /* Score.swift */; };
-		AA01A9302AB9E6B70003E9FB /* GameVM+GK.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01A92F2AB9E6B70003E9FB /* GameVM+GK.swift */; };
+		AA01A9302AB9E6B70003E9FB /* GameVM+MP.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01A92F2AB9E6B70003E9FB /* GameVM+MP.swift */; };
+		AA01A9322AB9F2BD0003E9FB /* GameVM+GK.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01A9312AB9F2BD0003E9FB /* GameVM+GK.swift */; };
 		AA9149B02AB9A60F00627815 /* GKConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA9149AF2AB9A60F00627815 /* GKConnectionManager.swift */; };
 		AA9149B22AB9B66900627815 /* GKPeersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA9149B12AB9B66900627815 /* GKPeersView.swift */; };
 /* End PBXBuildFile section */
@@ -53,7 +54,8 @@
 		AA005D0A2AB352C4005AB524 /* MPConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPConnectionManager.swift; sourceTree = "<group>"; };
 		AA005D0E2AB36195005AB524 /* MPPeersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPPeersView.swift; sourceTree = "<group>"; };
 		AA005D102AB754BA005AB524 /* Score.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Score.swift; sourceTree = "<group>"; };
-		AA01A92F2AB9E6B70003E9FB /* GameVM+GK.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameVM+GK.swift"; sourceTree = "<group>"; };
+		AA01A92F2AB9E6B70003E9FB /* GameVM+MP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameVM+MP.swift"; sourceTree = "<group>"; };
+		AA01A9312AB9F2BD0003E9FB /* GameVM+GK.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameVM+GK.swift"; sourceTree = "<group>"; };
 		AA9149AE2AB9A5B700627815 /* Quiz Game.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Quiz Game.entitlements"; sourceTree = "<group>"; };
 		AA9149AF2AB9A60F00627815 /* GKConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GKConnectionManager.swift; sourceTree = "<group>"; };
 		AA9149B12AB9B66900627815 /* GKPeersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GKPeersView.swift; sourceTree = "<group>"; };
@@ -166,7 +168,8 @@
 			isa = PBXGroup;
 			children = (
 				AA005D032AB31A69005AB524 /* GameVM.swift */,
-				AA01A92F2AB9E6B70003E9FB /* GameVM+GK.swift */,
+				AA01A92F2AB9E6B70003E9FB /* GameVM+MP.swift */,
+				AA01A9312AB9F2BD0003E9FB /* GameVM+GK.swift */,
 				AA005D0A2AB352C4005AB524 /* MPConnectionManager.swift */,
 				AA9149AF2AB9A60F00627815 /* GKConnectionManager.swift */,
 			);
@@ -247,7 +250,7 @@
 				AA005CF92AB30F00005AB524 /* AnswerRow.swift in Sources */,
 				AA9149B22AB9B66900627815 /* GKPeersView.swift in Sources */,
 				AA005D042AB31A69005AB524 /* GameVM.swift in Sources */,
-				AA01A9302AB9E6B70003E9FB /* GameVM+GK.swift in Sources */,
+				AA01A9302AB9E6B70003E9FB /* GameVM+MP.swift in Sources */,
 				AA005CF02AB30A1F005AB524 /* Text.swift in Sources */,
 				AA005D022AB31675005AB524 /* Endpoint.swift in Sources */,
 				AA005CFD2AB314DC005AB524 /* Trivia.swift in Sources */,
@@ -256,6 +259,7 @@
 				AA005CF42AB30BA1005AB524 /* QuestionView.swift in Sources */,
 				AA005D072AB34EB9005AB524 /* YourNameView.swift in Sources */,
 				AA005D112AB754BA005AB524 /* Score.swift in Sources */,
+				AA01A9322AB9F2BD0003E9FB /* GameVM+GK.swift in Sources */,
 				AA005CD92AB1F28C005AB524 /* AppEntry.swift in Sources */,
 				AA005D0B2AB352C4005AB524 /* MPConnectionManager.swift in Sources */,
 				AA005D0F2AB36195005AB524 /* MPPeersView.swift in Sources */,

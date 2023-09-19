@@ -1,74 +1,31 @@
 //
-//  MPConnectionManager.swift
+//  GameVM+MP.swift
 //  Quiz Game
 //
-//  Created by Steve on 14/09/2023.
+//  Created by Steve on 19/09/2023.
 //
 
+import Foundation
 import MultipeerConnectivity
 
-//extension String {
-//    static var serviceName = "QuizGame"
-//}
+extension String {
+    static var serviceName = "QuizGame"
+}
 
-class MPConnectionManager: NSObject, ObservableObject {
-    let serviceType = String.serviceName
-    let session: MCSession
-    let myPeerId: MCPeerID
-    let nearbyServiceAdvertiser: MCNearbyServiceAdvertiser
-    let nearbyServiceBrowser: MCNearbyServiceBrowser
-    var game: GameVM?
-    
-    func setup(game: GameVM) {
-        self.game = game
-    }
-    
-    @Published var availablePeers = [MCPeerID]()
-    @Published var receivedInvite: Bool = false
-    @Published var receivedInviteFrom: MCPeerID?
-    @Published var invitationHandler: ((Bool, MCSession?) -> Void)?
-    
-    @Published var paired: Bool = false
-    @Published var playing: Bool = false
-
-    
-//    var isAvailableToPlay: Bool = false
-//    {
-//        didSet {
-//            if isAvailableToPlay {
-//                startAdvertising()
-//                startBrowsing()
-//            } else {
-//                stopAdvertising()
-//                stopBrowsing()
-//            }
-//        }
+extension GameVM {
+//    deinit {
+//        stopAdvertisingAndBrowsing()
 //    }
     
-    init(yourName: String) {
-        myPeerId = MCPeerID(displayName: yourName)
-        session = MCSession(peer: myPeerId)
-        nearbyServiceAdvertiser = MCNearbyServiceAdvertiser(peer: myPeerId, discoveryInfo: nil, serviceType: serviceType)
-        nearbyServiceBrowser = MCNearbyServiceBrowser(peer: myPeerId, serviceType: serviceType)
-        super.init()
-        session.delegate = self
-        nearbyServiceAdvertiser.delegate = self
-        nearbyServiceBrowser.delegate = self
-    }
-    
-    deinit {
-        stopAdvertisingAndBrowsing()
-    }
-    
-    private func startAdvertising() {
+    private func MPstartAdvertising() {
         nearbyServiceAdvertiser.startAdvertisingPeer()
     }
     
-    private func stopAdvertising() {
+    private func MPstopAdvertising() {
         nearbyServiceAdvertiser.stopAdvertisingPeer()
     }
     
-    private func startBrowsing() {
+    private func MPstartBrowsing() {
         nearbyServiceBrowser.startBrowsingForPeers()
     }
     
@@ -76,20 +33,42 @@ class MPConnectionManager: NSObject, ObservableObject {
         nearbyServiceBrowser.stopBrowsingForPeers()
     }
     
-    func startAdvertisingAndBrowsing() {
-//        isAvailableToPlay = true
-        startAdvertising()
-        startBrowsing()
+    func MPstartAdvertisingAndBrowsing() {
+        MPstartAdvertising()
+        MPstartBrowsing()
     }
     
-    func stopAdvertisingAndBrowsing() {
-//        isAvailableToPlay = false
-        stopAdvertising()
+    func MPstopAdvertisingAndBrowsing() {
+        MPstopAdvertising()
         stopBrowsing()
         availablePeers.removeAll()
     }
     
-    func send(gameMove: MPGameMove) {
+
+    
+    func MPinvitePeer(peer: MCPeerID) {
+        nearbyServiceBrowser.invitePeer(peer, to: session, withContext: nil, timeout: 30)
+    }
+    
+    func MPacceptInvite() {
+        if let invitationHandler = invitationHandler {
+            invitationHandler(true, session)
+        }
+    }
+    
+    func MPdeclineInvite() {
+        if let invitationHandler = invitationHandler {
+            invitationHandler(false, nil)
+        }
+    }
+    
+    func MPstartGame() {
+        self.MPstopAdvertisingAndBrowsing()
+        self.playing = true
+        
+    }
+    
+    func MPsendMove(gameMove: MPGameMove) {
         if !session.connectedPeers.isEmpty {
             do {
                 if let data = gameMove.data() {
@@ -101,41 +80,16 @@ class MPConnectionManager: NSObject, ObservableObject {
         }
     }
     
-    @MainActor
-    func invitePeer(peer: MCPeerID, game: GameVM) {
-        nearbyServiceBrowser.invitePeer(peer, to: session, withContext: nil, timeout: 30)
-    }
-    
-    @MainActor
-    func acceptInvite(game: GameVM) {
-        if let invitationHandler = invitationHandler {
-            invitationHandler(true, session)
-        }
-    }
-    
-    func declineInvite() {
-        if let invitationHandler = invitationHandler {
-            invitationHandler(false, nil)
-        }
-    }
-    
-    func startGame() {
-//        self.isAvailableToPlay = false
-        self.stopAdvertisingAndBrowsing()
-        self.playing = true
-        
-    }
-    
-    func endGame() {
-//        self.isAvailableToPlay = true
+    func MPendGame() {
         self.playing = false
         self.paired = false
         self.session.disconnect()
     }
 }
 
+
 // Add and remove local peers from availablePeers array
-extension MPConnectionManager: MCNearbyServiceBrowserDelegate {
+extension GameVM: MCNearbyServiceBrowserDelegate {
     
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
         DispatchQueue.main.async {
@@ -156,7 +110,7 @@ extension MPConnectionManager: MCNearbyServiceBrowserDelegate {
 }
 
 // handle received invites
-extension MPConnectionManager: MCNearbyServiceAdvertiserDelegate {
+extension GameVM: MCNearbyServiceAdvertiserDelegate {
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
         DispatchQueue.main.async {
@@ -168,7 +122,7 @@ extension MPConnectionManager: MCNearbyServiceAdvertiserDelegate {
 }
 
 // handle connection and received moves
-extension MPConnectionManager: MCSessionDelegate {
+extension GameVM: MCSessionDelegate {
     
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         switch state {
@@ -176,7 +130,7 @@ extension MPConnectionManager: MCSessionDelegate {
             DispatchQueue.main.async {
                 self.paired = false
                 self.playing = false
-                self.startAdvertisingAndBrowsing()
+                self.MPstartAdvertisingAndBrowsing()
 //                self.isAvailableToPlay = true
             }
         case .connected:
@@ -187,7 +141,7 @@ extension MPConnectionManager: MCSessionDelegate {
             DispatchQueue.main.async {
                 self.paired = false
                 self.playing = false
-                self.startAdvertisingAndBrowsing()
+                self.MPstartAdvertisingAndBrowsing()
 //                self.isAvailableToPlay = true
             }
         }
@@ -200,20 +154,20 @@ extension MPConnectionManager: MCSessionDelegate {
             DispatchQueue.main.async {
                 switch gameMove.action {
                 case .start:
-                    self.startGame()
+                    self.MPstartGame()
                 case .questions:
-                    self.game?.setTrivia(questions: gameMove.questionSet)
+                    self.setTrivia(questions: gameMove.questionSet)
                 case .move:
                     if let answer = gameMove.answer, let name = gameMove.playerName {
-                        let i = self.game?.findIndexOfPlayer(name: name)
-                        if let i, i > -1 {
-                            self.game?.selectAnswer(index: i, answer: answer)
+                        let i = self.findIndexOfPlayer(name: name)
+                        if i > -1 {
+                            self.selectAnswer(index: i, answer: answer)
                         }
                     }
                 case .next:
-                    self.game?.goToNextQuestion()
+                    self.goToNextQuestion()
                 case .reset:
-                    self.game?.reset()
+                    self.reset()
                 case .end:
                     self.endGame()
                 }
@@ -232,3 +186,4 @@ extension MPConnectionManager: MCSessionDelegate {
     
     
 }
+

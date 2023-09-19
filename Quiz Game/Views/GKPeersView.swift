@@ -8,25 +8,26 @@
 import SwiftUI
 
 struct GKPeersView: View {
-    @EnvironmentObject var connectionManager: GKConnectionManager
+//    @EnvironmentObject var connectionManager: GKConnectionManager
     @EnvironmentObject var gameVM: GameVM
     
     @Binding var startGame: Bool
     
     var body: some View {
         VStack {
-            Text(connectionManager.authenticationState.rawValue)
+            Text(gameVM.authenticationState.rawValue)
             
-            if connectionManager.authenticationState == .authenticated {
+            if gameVM.authenticationState == .authenticated {
                 Button("Play") {
-                    connectionManager.startMatchmaking()
+                    gameVM.startMatchmaking()
                 }
                 .buttonStyle(.borderedProminent)
             }
         }
-        .onChange(of: connectionManager.playing) { newValue in
+        .onChange(of: gameVM.playing) { newValue in
             if newValue {
-                for player in connectionManager.otherPlayers {
+                gameVM.players[0].name = gameVM.localPlayer.displayName
+                for player in gameVM.otherPlayers {
                     gameVM.players.append(Player(name: player.displayName))
                 }
                 startGame = newValue

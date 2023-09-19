@@ -7,11 +7,11 @@
 
 import Foundation
 import SwiftUI
-
-
+import MultipeerConnectivity
+import GameKit
 
 @MainActor
-class GameVM: ObservableObject {
+class GameVM: NSObject, ObservableObject {
     @Published var gameType: GameType = .single
     @Published var players: [Player]
     @Published var host: Bool = false
@@ -30,9 +30,44 @@ class GameVM: ObservableObject {
     
     let countdownTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
+    
+    @Published var playing: Bool = false
+    
+    // MultpeerConnectivity set up
+    let serviceType = String.serviceName
+    let session: MCSession
+    let myPeerId: MCPeerID
+    let nearbyServiceAdvertiser: MCNearbyServiceAdvertiser
+    let nearbyServiceBrowser: MCNearbyServiceBrowser
+    
+    @Published var availablePeers: [MCPeerID] = []
+    @Published var receivedInvite: Bool = false
+    @Published var receivedInviteFrom: MCPeerID?
+    @Published var invitationHandler: ((Bool, MCSession?) -> Void)?
+    @Published var paired: Bool = false
+
+    // Game Centre set up
+    @Published var authenticationState = GKPlayerAuthState.authenticating
+    
+    var match: GKMatch?
+    var otherPlayers: [GKPlayer] = []
+    var localPlayer = GKLocalPlayer.local
+    var playerUUIDKey = UUID().uuidString
+    
+    
     init(yourName: String) {
         self.players = [Player(name: yourName)]
         self.yourName = yourName
+        
+        // MultpeerConnectivity
+        myPeerId = MCPeerID(displayName: yourName)
+        session = MCSession(peer: myPeerId)
+        nearbyServiceAdvertiser = MCNearbyServiceAdvertiser(peer: myPeerId, discoveryInfo: nil, serviceType: serviceType)
+        nearbyServiceBrowser = MCNearbyServiceBrowser(peer: myPeerId, serviceType: serviceType)
+        super.init()
+        session.delegate = self
+        nearbyServiceAdvertiser.delegate = self
+        nearbyServiceBrowser.delegate = self
     }
     
     private func simpleReset() {

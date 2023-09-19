@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MPPeersView: View {
-    @EnvironmentObject var connectionManager: MPConnectionManager
+//    @EnvironmentObject var connectionManager: MPConnectionManager
     @EnvironmentObject var gameVM: GameVM
     
     @Binding var startGame: Bool
@@ -18,26 +18,25 @@ struct MPPeersView: View {
             VStack {
                 Text("Available Players")
                     .font(.title2)
-                if connectionManager.availablePeers.isEmpty {
+                if gameVM.availablePeers.isEmpty {
                     ProgressView()
                         .padding()
                 }
-                ForEach(connectionManager.availablePeers, id: \.self) { peer in
+                ForEach(gameVM.availablePeers, id: \.self) { peer in
                     HStack {
                         Text(peer.displayName)
                         Spacer()
-                        if !connectionManager.session.connectedPeers.contains(peer) {
-                            Button("Connect") {
-                                connectionManager.invitePeer(peer: peer, game: gameVM)
-                            }
-                            .buttonStyle(.borderedProminent)
-                        } else {
+                        if gameVM.session.connectedPeers.contains(peer) {
                             Button("Disconnect") {
-                                connectionManager.endGame()
+                                gameVM.MPendGame()
                             }
                             .buttonStyle(.bordered)
+                        } else {
+                            Button("Connect") {
+                                gameVM.MPinvitePeer(peer: peer)
+                            }
+                            .buttonStyle(.borderedProminent)
                         }
-                        
                     }
                 }
             }
@@ -45,35 +44,33 @@ struct MPPeersView: View {
             Button("Start Game") {
                 gameVM.players[0].isHost = true
                 let gameMove = MPGameMove(action: .start)
-                connectionManager.send(gameMove: gameMove)
-                connectionManager.startGame()
+                gameVM.MPsendMove(gameMove: gameMove)
+                gameVM.MPstartGame()
             }
             .buttonStyle(.borderedProminent)
-            .disabled(connectionManager.session.connectedPeers.count == 0)
+            .disabled(gameVM.session.connectedPeers.count == 0)
             
         }
-        .alert("Received invite from \(connectionManager.receivedInviteFrom?.displayName ?? "Unknown")", isPresented: $connectionManager.receivedInvite) {
+        .alert("Received invite from \(gameVM.receivedInviteFrom?.displayName ?? "Unknown")", isPresented: $gameVM.receivedInvite) {
             Button("Accept Invite") {
-                connectionManager.acceptInvite(game: gameVM)
+                gameVM.MPacceptInvite()
             }
             Button("Reject") {
-                connectionManager.declineInvite()
+                gameVM.MPdeclineInvite()
             }
         }
         .background(Color.theme.background)
         .onAppear {
             gameVM.players[0].isHost = false
-//            connectionManager.isAvailableToPlay = true
-            connectionManager.startAdvertisingAndBrowsing()
+            gameVM.MPstartAdvertisingAndBrowsing()
         }
         .onDisappear {
-//            connectionManager.isAvailableToPlay = false
-            connectionManager.stopAdvertisingAndBrowsing()
-            connectionManager.endGame()
+            gameVM.MPstopAdvertisingAndBrowsing()
+            gameVM.MPendGame()
         }
-        .onChange(of: connectionManager.playing) { newValue in
+        .onChange(of: gameVM.playing) { newValue in
             if newValue {
-                for player in connectionManager.session.connectedPeers {
+                for player in gameVM.session.connectedPeers {
                     gameVM.players.append(Player(name: player.displayName))
                 }
                 startGame = newValue

@@ -10,7 +10,7 @@ import SwiftUI
 struct ShowQuestionsOrEndScreen: View {
 
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var connectionManager: MPConnectionManager
+//    @EnvironmentObject var connectionManager: MPConnectionManager
     @EnvironmentObject var gameVM: GameVM
     
     var body: some View {
@@ -43,7 +43,7 @@ struct ShowQuestionsOrEndScreen: View {
                         Button("Play Again") {
                             if gameVM.gameType == .peer {
                                 let gameMove = MPGameMove(action: .reset)
-                                connectionManager.send(gameMove: gameMove)
+                                gameVM.MPsendMove(gameMove: gameMove)
                             }
                             gameVM.reset()
                         }
@@ -53,8 +53,8 @@ struct ShowQuestionsOrEndScreen: View {
                         Button("Quit Game") {
                             if gameVM.gameType == .peer {
                                 let gameMove = MPGameMove(action: .end)
-                                connectionManager.send(gameMove: gameMove)
-                                connectionManager.endGame()
+                                gameVM.MPsendMove(gameMove: gameMove)
+                                gameVM.endGame()
                             } else {
                                 dismiss()
                             }
@@ -73,13 +73,13 @@ struct ShowQuestionsOrEndScreen: View {
                     .environmentObject(gameVM)
                     .onAppear {
                         gameVM.reset()
-                        if gameVM.gameType == .peer {
-                            connectionManager.setup(game: gameVM)
-                        }
+//                        if gameVM.gameType == .peer {
+//                            connectionManager.setup(game: gameVM)
+//                        }
                     }
             }
         }
-        .onChange(of: connectionManager.playing) { newValue in
+        .onChange(of: gameVM.playing) { newValue in
             if !newValue {
                 gameVM.players[0].isHost = false
                 dismiss()

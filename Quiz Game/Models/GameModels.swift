@@ -49,6 +49,7 @@ struct MPGameMove: Codable {
     }
     
     let action: Action
+    var UUIDString: String? = nil
     var players: [Player] = []
     var playerName: String? = nil
     var questionSet: [Trivia.Question] = []
