@@ -78,14 +78,14 @@ struct ShowQuestionsOrEndScreen: View {
                         }
                     }
             }
-
         }
-        .onChange(of: connectionManager.playing, perform: { newValue in
+        .onChange(of: connectionManager.playing) { newValue in
             if !newValue {
                 gameVM.players[0].isHost = false
                 dismiss()
             }
-        })
+        }
+
     }
 }
 

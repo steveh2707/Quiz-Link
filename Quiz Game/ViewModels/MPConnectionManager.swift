@@ -29,29 +29,21 @@ class MPConnectionManager: NSObject, ObservableObject {
     @Published var invitationHandler: ((Bool, MCSession?) -> Void)?
     
     @Published var paired: Bool = false
-    
     @Published var playing: Bool = false
+
+    
+//    var isAvailableToPlay: Bool = false
 //    {
 //        didSet {
-//            if playing {
-//                isAvailableToPlay = false
+//            if isAvailableToPlay {
+//                startAdvertising()
+//                startBrowsing()
 //            } else {
-//                isAvailableToPlay = true
+//                stopAdvertising()
+//                stopBrowsing()
 //            }
 //        }
 //    }
-    
-    @Published var isAvailableToPlay: Bool = false {
-        didSet {
-            if isAvailableToPlay {
-                startAdvertising()
-                startBrowsing()
-            } else {
-                stopAdvertising()
-                stopBrowsing()
-            }
-        }
-    }
     
     init(yourName: String) {
         myPeerId = MCPeerID(displayName: yourName)
@@ -65,24 +57,35 @@ class MPConnectionManager: NSObject, ObservableObject {
     }
     
     deinit {
-        stopAdvertising()
-        stopBrowsing()
+        stopAdvertisingAndBrowsing()
     }
     
-    func startAdvertising() {
+    private func startAdvertising() {
         nearbyServiceAdvertiser.startAdvertisingPeer()
     }
     
-    func stopAdvertising() {
+    private func stopAdvertising() {
         nearbyServiceAdvertiser.stopAdvertisingPeer()
     }
     
-    func startBrowsing() {
+    private func startBrowsing() {
         nearbyServiceBrowser.startBrowsingForPeers()
     }
     
-    func stopBrowsing() {
+    private func stopBrowsing() {
         nearbyServiceBrowser.stopBrowsingForPeers()
+    }
+    
+    func startAdvertisingAndBrowsing() {
+//        isAvailableToPlay = true
+        startAdvertising()
+        startBrowsing()
+    }
+    
+    func stopAdvertisingAndBrowsing() {
+//        isAvailableToPlay = false
+        stopAdvertising()
+        stopBrowsing()
         availablePeers.removeAll()
     }
     
@@ -117,12 +120,14 @@ class MPConnectionManager: NSObject, ObservableObject {
     }
     
     func startGame() {
-        self.isAvailableToPlay = false
+//        self.isAvailableToPlay = false
+        self.stopAdvertisingAndBrowsing()
         self.playing = true
+        
     }
     
     func endGame() {
-        self.isAvailableToPlay = true
+//        self.isAvailableToPlay = true
         self.playing = false
         self.paired = false
         self.session.disconnect()
@@ -171,7 +176,8 @@ extension MPConnectionManager: MCSessionDelegate {
             DispatchQueue.main.async {
                 self.paired = false
                 self.playing = false
-                self.isAvailableToPlay = true
+                self.startAdvertisingAndBrowsing()
+//                self.isAvailableToPlay = true
             }
         case .connected:
             DispatchQueue.main.async {
@@ -181,7 +187,8 @@ extension MPConnectionManager: MCSessionDelegate {
             DispatchQueue.main.async {
                 self.paired = false
                 self.playing = false
-                self.isAvailableToPlay = true
+                self.startAdvertisingAndBrowsing()
+//                self.isAvailableToPlay = true
             }
         }
     }

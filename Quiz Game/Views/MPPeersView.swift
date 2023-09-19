@@ -63,10 +63,12 @@ struct MPPeersView: View {
         .background(Color.theme.background)
         .onAppear {
             gameVM.players[0].isHost = false
-            connectionManager.isAvailableToPlay = true
+//            connectionManager.isAvailableToPlay = true
+            connectionManager.startAdvertisingAndBrowsing()
         }
         .onDisappear {
-            connectionManager.isAvailableToPlay = false
+//            connectionManager.isAvailableToPlay = false
+            connectionManager.stopAdvertisingAndBrowsing()
             connectionManager.endGame()
         }
         .onChange(of: connectionManager.playing) { newValue in

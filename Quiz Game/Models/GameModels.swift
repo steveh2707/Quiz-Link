@@ -7,17 +7,21 @@
 
 import Foundation
 
+
+let maxRemainingTime = 10
+let gameTitle = "Quiz Link"
+
 enum GameType {
-    case single, peer, undetermined
+    case single, peer, online
     
     var description: String {
         switch self {
         case .single:
-            return "Answer quiz questions on your own."
+            return "Answer quiz questions on your own!"
         case .peer:
-            return "Invite someone near you who has this app running to play"
-        case .undetermined:
-            return ""
+            return "Invite someone near you who has this app running to play!"
+        case .online:
+            return "Play online against anyone in the world!"
         }
     }
 }
@@ -56,4 +60,11 @@ struct MPGameMove: Codable {
     }
 }
 
-let maxRemainingTime = 10
+
+enum GKPlayerAuthState: String {
+    case authenticating = "Logging in to Game Center..."
+    case unauthenticated = "Please sign in to Game Center to play."
+    case authenticated = ""
+    case error = "There was an error logging into Game Center."
+    case restricted = "You're not allowed to play multiplayer games!"
+}

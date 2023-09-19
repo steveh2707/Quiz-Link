@@ -12,7 +12,7 @@ import SwiftUI
 extension Text {
     func accentTitle() -> some View {
         self
-            .font(.title)
+            .font(.largeTitle)
             .fontWeight(.heavy)
             .foregroundColor(Color.theme.accent)
     }

@@ -99,6 +99,10 @@ struct QuestionView: View {
                         connectionManager.send(gameMove: gameMove)
                     }
                 }
+            } else if gameVM.gameType == .online {
+                Task {
+                    await gameVM.fetchTrivia()
+                }
             }
         }
         .onReceive(gameVM.countdownTimer) { _ in

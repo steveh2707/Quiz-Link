@@ -10,66 +10,72 @@ import SwiftUI
 struct StartView: View {
     
 
-    @StateObject private var connectionManager: MPConnectionManager
-    @StateObject var gameVM: GameVM
+    @StateObject private var gameVM: GameVM
+    @StateObject private var mpConnectionManager: MPConnectionManager
+    @StateObject private var gkConnectionManager = GKConnectionManager()
     
     @AppStorage("yourName") var yourName = ""
-    @FocusState private var focus: Bool
     @State private var startGame = false
     
     init(yourName: String) {
         self.yourName = yourName
-        self._connectionManager = StateObject(wrappedValue: MPConnectionManager(yourName: yourName))
+        self._mpConnectionManager = StateObject(wrappedValue: MPConnectionManager(yourName: yourName))
         self._gameVM = StateObject(wrappedValue: GameVM(yourName: yourName))
     }
     
     var body: some View {
         NavigationStack {
             VStack {
-                Spacer()
-                Text("Quiz Game")
+                Image(systemName: "brain")
+                    .foregroundColor(.theme.accent)
+                    .font(.system(size: 50))
+                    .padding(.top)
+                Text(gameTitle)
                     .accentTitle()
-                    .padding()
+                
                 Picker("Select Game", selection: $gameVM.gameType) {
-                    Text("Select Game Type").tag(GameType.undetermined)
-                    Text("Play on your own").tag(GameType.single)
-                    Text("Play against a friend").tag(GameType.peer)
+                    Text("Single").tag(GameType.single)
+                    Text("Local").tag(GameType.peer)
+                    Text("Online").tag(GameType.online)
                 }
+                .pickerStyle(.segmented)
                 .padding()
-                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(lineWidth: 2))
+
                 Text(gameVM.gameType.description)
-                    .padding()
+                    .foregroundColor(.theme.secondaryText)
+                    .padding(.vertical)
+                    .multilineTextAlignment(.center)
                 VStack {
                     switch gameVM.gameType {
                     case .single:
-                        EmptyView()
+                        Spacer()
+                        Button("Start Game") {
+                            startGame = true
+                        }
+                        .buttonStyle(.borderedProminent)
+                        Spacer()
                     case .peer:
                         MPPeersView(startGame: $startGame)
-                            .environmentObject(connectionManager)
+                            .environmentObject(mpConnectionManager)
                             .environmentObject(gameVM)
-                    case .undetermined:
-                        EmptyView()
+                    case .online:
+                        GKPeersView(startGame: $startGame)
+                            .environmentObject(gkConnectionManager)
+                            .environmentObject(gameVM)
+                            .onAppear {
+                                gkConnectionManager.authenticateUser()
+                            }
                     }
                 }
                 .padding()
                 .textFieldStyle(.roundedBorder)
-                .focused($focus)
                 .frame(width: 350)
-                
-                if gameVM.gameType != .peer {
-                    Button("Start Game") {
-                        focus = false
-                        startGame = true
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(
-                        gameVM.gameType == .undetermined
-                    )
-                }
+
+
                 Spacer()
                 Text("Your name is \(yourName)")
                 Button("Change Name") {
-                    
+                    //TODO: Add code to change name
                 }
                 .buttonStyle(.bordered)
             }
@@ -78,12 +84,17 @@ struct StartView: View {
             .background(Color.theme.background)
             .fullScreenCover(isPresented: $startGame) {
                 ShowQuestionsOrEndScreen()
-                    .environmentObject(connectionManager)
+                    .environmentObject(mpConnectionManager)
                     .environmentObject(gameVM)
                     .onDisappear {
                         gameVM.endGame()
                     }
-                    
+            }
+            .onChange(of: gameVM.gameType) { newGameType in
+                if newGameType != .peer {
+//                    connectionManager.isAvailableToPlay = false
+                    mpConnectionManager.stopAdvertisingAndBrowsing()
+                }
             }
         }
     }
