@@ -8,10 +8,8 @@
 import SwiftUI
 
 struct GKPeersView: View {
-//    @EnvironmentObject var connectionManager: GKConnectionManager
     @EnvironmentObject var gameVM: GameVM
     
-    @Binding var startGame: Bool
     
     var body: some View {
         VStack {
@@ -19,19 +17,17 @@ struct GKPeersView: View {
             
             if gameVM.authenticationState == .authenticated {
                 Button("Play") {
-                    gameVM.startMatchmaking()
+                    gameVM.GKstartMatchmaking()
                 }
                 .buttonStyle(.borderedProminent)
             }
-        }
-        .onChange(of: gameVM.playing) { newValue in
-            if newValue {
-                gameVM.players[0].name = gameVM.localPlayer.displayName
-                for player in gameVM.otherPlayers {
-                    gameVM.players.append(Player(name: player.displayName))
-                }
-                startGame = newValue
+            
+            ForEach(gameVM.players) { player in
+                Text(player.name)
             }
+        }
+        .onAppear {
+            gameVM.authenticateUser()
         }
         
     }
@@ -39,7 +35,7 @@ struct GKPeersView: View {
 
 struct GKPeersVoew_Previews: PreviewProvider {
     static var previews: some View {
-        GKPeersView(startGame: .constant(false))
+        GKPeersView()
             .environmentObject(GKConnectionManager())
             .environmentObject(GameVM(yourName: "Sample"))
     }

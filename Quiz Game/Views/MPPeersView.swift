@@ -8,10 +8,7 @@
 import SwiftUI
 
 struct MPPeersView: View {
-//    @EnvironmentObject var connectionManager: MPConnectionManager
     @EnvironmentObject var gameVM: GameVM
-    
-    @Binding var startGame: Bool
     
     var body: some View {
         VStack(spacing: 20) {
@@ -28,7 +25,9 @@ struct MPPeersView: View {
                         Spacer()
                         if gameVM.session.connectedPeers.contains(peer) {
                             Button("Disconnect") {
-                                gameVM.MPendGame()
+//                                gameVM.endGame()
+                                gameVM.MPdisconnect()
+                                //TODO: endGame function overkill here?
                             }
                             .buttonStyle(.bordered)
                         } else {
@@ -42,9 +41,6 @@ struct MPPeersView: View {
             }
             
             Button("Start Game") {
-                gameVM.players[0].isHost = true
-                let gameMove = MPGameMove(action: .start)
-                gameVM.MPsendMove(gameMove: gameMove)
                 gameVM.MPstartGame()
             }
             .buttonStyle(.borderedProminent)
@@ -65,23 +61,17 @@ struct MPPeersView: View {
             gameVM.MPstartAdvertisingAndBrowsing()
         }
         .onDisappear {
+            print("disappear")
+//            gameVM.removeOtherPlayers()
+            gameVM.MPdisconnect()
             gameVM.MPstopAdvertisingAndBrowsing()
-            gameVM.MPendGame()
-        }
-        .onChange(of: gameVM.playing) { newValue in
-            if newValue {
-                for player in gameVM.session.connectedPeers {
-                    gameVM.players.append(Player(name: player.displayName))
-                }
-                startGame = newValue
-            }
         }
     }
 }
 
 struct MPPeersView_Previews: PreviewProvider {
     static var previews: some View {
-        MPPeersView(startGame: .constant(false))
+        MPPeersView()
             .environmentObject(MPConnectionManager(yourName: "Sample"))
             .environmentObject(GameVM(yourName: "Sample"))
     }

@@ -40,14 +40,20 @@ struct AnswerRow: View {
             if gameVM.players[0].answer == nil {
                 isSelected = true
                 gameVM.selectAnswer(index: 0, answer: answer)
-                if gameVM.gameType == .peer {
+                
+                if gameVM.multiplayerGame {
                     let gameMove = MPGameMove(action: .move, playerName: gameVM.myPeerId.displayName, answer: answer)
-                    gameVM.MPsendMove(gameMove: gameMove)
+                    gameVM.sendMove(gameMove: gameMove)
                 }
-                if gameVM.gameType == .online {
-                    let gameMove = MPGameMove(action: .move, playerName: gameVM.localPlayer.displayName, answer: answer)
-                    gameVM.GKsendMove(gameMove: gameMove)
-                }
+                
+//                if gameVM.gameType == .peer {
+//                    let gameMove = MPGameMove(action: .move, playerName: gameVM.myPeerId.displayName, answer: answer)
+//                    gameVM.MPsendMove(gameMove: gameMove)
+//                }
+//                if gameVM.gameType == .online {
+//                    let gameMove = MPGameMove(action: .move, playerName: gameVM.localPlayer.displayName, answer: answer)
+//                    gameVM.GKsendMove(gameMove: gameMove)
+//                }
             }
             
         }

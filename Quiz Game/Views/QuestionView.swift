@@ -10,77 +10,69 @@ import SwiftUI
 struct QuestionView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var gameVM: GameVM
-//    @EnvironmentObject var connectionManager: MPConnectionManager
     
     var body: some View {
         VStack(spacing: 20) {
-            
-            HStack {
-                Text("Quiz Game")
-                    .accentTitle()
+            if gameVM.trivia.isEmpty {
                 
-                Spacer()
-                
-                Text("\(gameVM.index+1) out of \(gameVM.length)")
+                Text("Getting question set...")
                     .foregroundColor(Color.theme.accent)
-                    .fontWeight(.heavy)
-            }
-            
-            ProgressBar(progress: gameVM.progress)
-            
-            VStack(alignment: .leading, spacing: 20) {
-                Text(gameVM.question)
-                    .font(.system(size: 20))
-                    .bold()
-                    .foregroundColor(.theme.secondaryText)
-                    .padding(.bottom)
-                    .fixedSize(horizontal: false, vertical: true)
+                ProgressView()
                 
-                ForEach(gameVM.answerChoices, id: \.id) { answer in
-                    AnswerRow(answer: answer)
-                }
-            }
-            
-            Button("Next") {
-                gameVM.goToNextQuestion()
-                if gameVM.gameType == .peer {
-                    let gameMove = MPGameMove(action: .next)
-                    gameVM.MPsendMove(gameMove: gameMove)
-                }
-                if gameVM.gameType == .online {
-                    let gameMove = MPGameMove(action: .next)
-                    gameVM.GKsendMove(gameMove: gameMove)
-                }
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(!gameVM.allPlayersAnswered)
-            
-            Spacer(minLength: 0)
-            
-            ScrollView(.horizontal, showsIndicators: false) {
+            } else {
                 HStack {
-                    ForEach(gameVM.players) { player in
-                        Score(player: player)
+                    Text("Quiz Game")
+                        .accentTitle()
+                    
+                    Spacer()
+                    
+                    Text("\(gameVM.index+1) out of \(gameVM.length)")
+                        .foregroundColor(Color.theme.accent)
+                        .fontWeight(.heavy)
+                }
+                
+                ProgressBar(progress: gameVM.progress)
+                
+                VStack(alignment: .leading, spacing: 20) {
+                    Text(gameVM.question)
+                        .font(.system(size: 20))
+                        .bold()
+                        .foregroundColor(.theme.secondaryText)
+                        .padding(.bottom)
+                        .fixedSize(horizontal: false, vertical: true)
+                    
+                    ForEach(gameVM.answerChoices, id: \.id) { answer in
+                        AnswerRow(answer: answer)
                     }
                 }
+                
+                Button("Next") {
+                    if gameVM.multiplayerGame {
+                        let gameMove = MPGameMove(action: .next)
+                        gameVM.sendMove(gameMove: gameMove)
+                    }
+                    gameVM.goToNextQuestion()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!gameVM.allPlayersAnswered)
+                
+                Spacer(minLength: 0)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        ForEach(gameVM.players) { player in
+                            Score(player: player)
+                        }
+                    }
+                }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("End Game") {
-                    if gameVM.gameType == .peer {
-                        let gameMove = MPGameMove(action: .end)
-                        gameVM.MPsendMove(gameMove: gameMove)
-                        gameVM.MPendGame()
-                    } else if gameVM.gameType == .online {
-                        let gameMove = MPGameMove(action: .end)
-                        gameVM.GKsendMove(gameMove: gameMove)
-                        gameVM.MPendGame()
-                    } else {
-                        dismiss()
-                    }
+                    gameVM.endGame()
                 }
                 .buttonStyle(.bordered)
             }
@@ -95,28 +87,14 @@ struct QuestionView: View {
                 }
             }
         }
-
         .onAppear {
-            gameVM.remainingTime = maxRemainingTime
+            gameVM.reset()
+//            gameVM.remainingTime = maxRemainingTime
             if gameVM.gameType == .single || gameVM.players[0].isHost {
                 Task {
                     await gameVM.fetchTrivia()
-                    
-                    if gameVM.gameType == .peer {
-                        let gameMove = MPGameMove(action: .questions, questionSet: gameVM.trivia)
-                        gameVM.MPsendMove(gameMove: gameMove)
-                    }
-                    if gameVM.gameType == .online {
-                        let gameMove = MPGameMove(action: .questions, questionSet: gameVM.trivia)
-                        gameVM.GKsendMove(gameMove: gameMove)
-                    }
                 }
-            } 
-//            else if gameVM.gameType == .online {
-//                Task {
-//                    await gameVM.fetchTrivia()
-//                }
-//            }
+            }
         }
         .onReceive(gameVM.countdownTimer) { _ in
             gameVM.remainingTime -= 1

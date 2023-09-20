@@ -14,12 +14,8 @@ import GameKit
 class GameVM: NSObject, ObservableObject {
     @Published var gameType: GameType = .single
     @Published var players: [Player]
-    @Published var host: Bool = false
-    
-    @Published var startGame: Bool = false
-    
-    private(set) var yourName: String
-    private(set) var trivia: [Trivia.Question] = []
+
+    @Published private(set) var trivia: [Trivia.Question] = []
     @Published private(set) var length = 0
     @Published private(set) var index = 0
     @Published private(set) var reachedEnd = false
@@ -29,6 +25,9 @@ class GameVM: NSObject, ObservableObject {
     @Published var remainingTime = maxRemainingTime
     
     let countdownTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    @Published var viewState: ViewState?
+    @Published var hasError = false
+    @Published var error: NetworkingManager.NetworkingError?
     
     
     @Published var playing: Bool = false
@@ -40,7 +39,7 @@ class GameVM: NSObject, ObservableObject {
     let nearbyServiceAdvertiser: MCNearbyServiceAdvertiser
     let nearbyServiceBrowser: MCNearbyServiceBrowser
     
-    @Published var availablePeers: [MCPeerID] = []
+    @Published var availablePeers = [MCPeerID]()
     @Published var receivedInvite: Bool = false
     @Published var receivedInviteFrom: MCPeerID?
     @Published var invitationHandler: ((Bool, MCSession?) -> Void)?
@@ -50,15 +49,15 @@ class GameVM: NSObject, ObservableObject {
     @Published var authenticationState = GKPlayerAuthState.authenticating
     
     var match: GKMatch?
-    var otherPlayers: [GKPlayer] = []
     var localPlayer = GKLocalPlayer.local
-    var playerUUIDKey = UUID().uuidString
+    var highestUUIDReceived: String  // Used to determine host
     
     
     init(yourName: String) {
-        self.players = [Player(name: yourName)]
-        self.yourName = yourName
-        
+        let uuidString = UUID().uuidString
+        self.highestUUIDReceived = uuidString
+        self.players = [Player(id: uuidString, name: yourName)]
+
         // MultpeerConnectivity
         myPeerId = MCPeerID(displayName: yourName)
         session = MCSession(peer: myPeerId)
@@ -69,6 +68,15 @@ class GameVM: NSObject, ObservableObject {
         nearbyServiceAdvertiser.delegate = self
         nearbyServiceBrowser.delegate = self
     }
+    
+    
+    func startGame() {
+        if gameType == .peer {
+            MPstopAdvertisingAndBrowsing()
+        }
+        self.playing = true
+    }
+
     
     private func simpleReset() {
         self.trivia = []
@@ -89,13 +97,34 @@ class GameVM: NSObject, ObservableObject {
         }
     }
     
-    func endGame() {
-        self.simpleReset()
+    func removeOtherPlayers() {
         players.removeSubrange(1..<players.count)
     }
     
+    func endGame() {
+        self.simpleReset()
+        self.removeOtherPlayers()
+        self.playing = false
+        
+        if multiplayerGame {
+            let gameMove = MPGameMove(action: .end)
+            sendMove(gameMove: gameMove)
+            
+            if gameType == .peer {
+                MPdisconnect()
+            }
+
+            if gameType == .online {
+                self.match?.disconnect()
+                self.highestUUIDReceived = players[0].id
+            }
+        }
+    }
     
     func fetchTrivia() async {
+        viewState = .fetching
+        defer { viewState = .finished }
+        
         do {
             // interact with API and assign response to decodedResponse variable
             let decodedResponse = try await NetworkingManager.shared.request(.trivia(amount: 10), type: Trivia.self)
@@ -103,6 +132,12 @@ class GameVM: NSObject, ObservableObject {
             
             self.trivia = decodedResponse.results
             self.length = self.trivia.count
+            
+            if multiplayerGame {
+                let gameMove = MPGameMove(action: .questions, questionSet: trivia)
+                sendMove(gameMove: gameMove)
+            }
+            
             self.setQuestion()
                         
         } catch {
@@ -110,12 +145,12 @@ class GameVM: NSObject, ObservableObject {
             if let errorCode = (error as NSError?)?.code, errorCode == NSURLErrorCancelled { return }
             
             // assign any other error to local error variable to be displayed to user
-//            self.hasError = true
-//            if let networkingError = error as? NetworkingManager.NetworkingError {
-//                self.error = networkingError
-//            } else {
-//                self.error = .custom(error: error)
-//            }
+            self.hasError = true
+            if let networkingError = error as? NetworkingManager.NetworkingError {
+                self.error = networkingError
+            } else {
+                self.error = .custom(error: error)
+            }
             print("Error fetching trivia: \(error)")
         }
     }
@@ -150,7 +185,6 @@ class GameVM: NSObject, ObservableObject {
     }
     
     func selectAnswer(index: Int, answer: Answer) {
-        
         players[index].answer = answer
         if answer.isCorrect {
             players[index].score += 1
@@ -167,6 +201,31 @@ class GameVM: NSObject, ObservableObject {
         return -1
     }
     
+    func playAgain() {
+        if multiplayerGame {
+            let gameMove = MPGameMove(action: .reset)
+            self.sendMove(gameMove: gameMove)
+        }
+
+        self.reset()
+    }
+    
+    func sendMove(gameMove: MPGameMove) {
+        do {
+            if let data = gameMove.data() {
+                if self.gameType == .peer {
+                    try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+                }
+                if self.gameType == .online {
+                    try match?.sendData(toAllPlayers: data, with: .reliable)
+                }
+            }
+        } catch {
+            print("error sending \(error.localizedDescription)")
+        }
+    }
+    
+    
     var allPlayersAnswered: Bool {
         var allAnswered = true
         for player in players {
@@ -175,6 +234,10 @@ class GameVM: NSObject, ObservableObject {
             }
         }
         return allAnswered
+    }
+    
+    var multiplayerGame: Bool {
+        self.gameType == .peer || self.gameType == .online
     }
 
 }

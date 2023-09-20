@@ -8,6 +8,7 @@
 import Foundation
 import GameKit
 
+@MainActor
 extension GameVM {
     var rootViewController: UIViewController? {
         let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene
@@ -39,7 +40,7 @@ extension GameVM {
         }
     }
     
-    func startMatchmaking() {
+    func GKstartMatchmaking() {
         let request = GKMatchRequest()
         request.minPlayers = 2
         request.maxPlayers = 2
@@ -50,74 +51,72 @@ extension GameVM {
         rootViewController?.present(matchmakingVC!, animated: true)
     }
     
-    @MainActor
-    func startGame(newMatch: GKMatch) {
+//    @MainActor
+    func GKstartGame(newMatch: GKMatch) {
         match = newMatch // likely be able to delete this
         match?.delegate = self
-        otherPlayers = match?.players ?? []
-//        for player in otherPlayers {
-//            game?.players.append(Player(name: player.displayName))
-//        }
-//        sendString("began:\(playerUUIDKey)")
-        let gameMove = MPGameMove(action: .start, UUIDString: playerUUIDKey)
-        GKsendMove(gameMove: gameMove)
-        playing = true
+        let otherPlayers = match?.players ?? []
+        for player in otherPlayers {
+            players.append(Player(name: player.displayName))
+        }
+        let gameMove = MPGameMove(action: .start, UUIDString: self.players[0].id)
+        sendMove(gameMove: gameMove)
     }
     
     
-//    func sendString(_ message: String) {
-//        guard let encoded = "strData:\(message)".data(using: .utf8) else { return }
-//        sendData(encoded)
+    
+//    func GKsendMove(gameMove: MPGameMove) {
+//        do {
+//            if let data = gameMove.data() {
+//                try match?.sendData(toAllPlayers: data, with: .reliable)
+//            }
+//        } catch  {
+//            print("error sending \(error.localizedDescription)")
+//        }
 //    }
     
-    func GKsendMove(gameMove: MPGameMove) {
-        
-        do {
-            if let data = gameMove.data() {
-                try match?.sendData(toAllPlayers: data, with: .reliable)
+    func GKHandleMove(gameMove: MPGameMove) {
+        switch gameMove.action {
+        case .start:
+            if let uuid = gameMove.UUIDString {
+
+                // logic to set host for multiple players
+                if self.players[0].id == highestUUIDReceived {
+                    if self.players[0].id > uuid {
+                        self.players[0].isHost = true
+                    } else {
+                        self.players[0].isHost = false
+                        highestUUIDReceived = uuid
+                    }
+                }
             }
-        } catch  {
-            print("error sending \(error.localizedDescription)")
+            startGame()
+            
+        case .questions:
+            self.setTrivia(questions: gameMove.questionSet)
+        case .move:
+            if let answer = gameMove.answer, let name = gameMove.playerName {
+                let i = self.findIndexOfPlayer(name: name)
+                if i > -1 {
+                    self.selectAnswer(index: i, answer: answer)
+                }
+            }
+        case .next:
+            self.goToNextQuestion()
+        case .reset:
+            self.reset()
+        case .end:
+            self.endGame()
         }
     }
     
-//    func sendData(_ data: Data, mode: GKMatch.SendDataMode = .reliable) {
-//        do {
-//            try match?.sendData(toAllPlayers: data, with: mode)
-//        } catch {
-//            print(error)
-//        }
-//    }
-    
-//    func receivedString(_ message: String) {
-//        let messageSplit = message.split(separator: ".")
-//        guard let messagePrefix = messageSplit.first else { return }
-//        
-//        let parameter = String(messageSplit.last ?? "")
-//        
-//        switch messagePrefix {
-//        case "began":
-//            // unlikely scenario that UUIDs are the same
-//            if playerUUIDKey == parameter {
-//                playerUUIDKey = UUID().uuidString
-//                sendString("began: \(playerUUIDKey)")
-//                break
-//            }
-//            
-//            players[0].isHost = playerUUIDKey > parameter
-//            
-//        default:
-//            break
-//        }
-//    }
 }
 
 extension GameVM: GKMatchmakerViewControllerDelegate {
     
-    @MainActor
     func matchmakerViewController(_ viewController: GKMatchmakerViewController, didFind match: GKMatch) {
         viewController.dismiss(animated: true)
-        startGame(newMatch: match)
+        GKstartGame(newMatch: match)
     }
     
     func matchmakerViewController(_ viewController: GKMatchmakerViewController, didFailWithError error: Error) {
@@ -129,49 +128,33 @@ extension GameVM: GKMatchmakerViewControllerDelegate {
     }
 }
 
+
 extension GameVM: GKMatchDelegate {
     
     func match(_ match: GKMatch, didReceive data: Data, fromRemotePlayer player: GKPlayer) {
         
         if let gameMove = try? JSONDecoder().decode(MPGameMove.self, from: data) {
             DispatchQueue.main.async {
-                switch gameMove.action {
-                case .start:
-                    if let uuid = gameMove.UUIDString {
-                        self.players[0].isHost = self.playerUUIDKey > uuid
-                    }
-                case .questions:
-                    self.setTrivia(questions: gameMove.questionSet)
-                case .move:
-                    if let answer = gameMove.answer, let name = gameMove.playerName {
-                        let i = self.findIndexOfPlayer(name: name)
-                        if i > -1 {
-                            self.selectAnswer(index: i, answer: answer)
-                        }
-                    }
-                case .next:
-                    self.goToNextQuestion()
-                case .reset:
-                    self.reset()
-                case .end:
-                    self.endGame()
-                }
+                self.GKHandleMove(gameMove: gameMove)
             }
         }
-        
-//        let content = String(decoding: data, as: UTF8.self)
-//        
-//        if content.starts(with: "strData:") {
-//            let message = content.replacing("strData", with: "")
-//            receivedString(message)
-//        } else {
-//            return
-//        }
     }
     
 
-    
     func match(_ match: GKMatch, player: GKPlayer, didChange state: GKPlayerConnectionState) {
-        
+        switch state {
+        case .disconnected:
+            DispatchQueue.main.async {
+                self.endGame()
+            }
+        case .connected:
+            DispatchQueue.main.async {
+                
+            }
+        default:
+            DispatchQueue.main.async {
+                
+            }
+        }
     }
 }

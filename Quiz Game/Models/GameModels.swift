@@ -34,12 +34,20 @@ struct Answer: Identifiable, Codable, Equatable {
 }
 
 
-struct Player: Identifiable, Codable {
-    var id: UUID { UUID() }
+struct Player: Identifiable, Codable, Equatable {
+    var id: String
     var name: String
-    var score: Int = 0
-    var isHost: Bool = false
-    var answer: Answer? = nil
+    var score: Int
+    var isHost: Bool
+    var answer: Answer?
+    
+    init(id: String = {UUID().uuidString}(), name: String, score: Int = 0, isHost: Bool = false, answer: Answer? = nil) {
+        self.id = id
+        self.name = name
+        self.score = score
+        self.isHost = isHost
+        self.answer = answer
+    }
 }
 
 
@@ -68,4 +76,10 @@ enum GKPlayerAuthState: String {
     case authenticated = ""
     case error = "There was an error logging into Game Center."
     case restricted = "You're not allowed to play multiplayer games!"
+}
+
+
+enum ViewState {
+    case fetching
+    case finished
 }
