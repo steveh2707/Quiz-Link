@@ -33,11 +33,12 @@ class GameVM: NSObject, ObservableObject {
     @Published var playing: Bool = false
     
     // MultpeerConnectivity set up
+    
     let serviceType = String.serviceName
-    let session: MCSession
-    let myPeerId: MCPeerID
-    let nearbyServiceAdvertiser: MCNearbyServiceAdvertiser
-    let nearbyServiceBrowser: MCNearbyServiceBrowser
+    @Published var session: MCSession?
+    var myPeerId: MCPeerID?
+    var nearbyServiceAdvertiser: MCNearbyServiceAdvertiser?
+    var nearbyServiceBrowser: MCNearbyServiceBrowser?
     
     @Published var availablePeers = [MCPeerID]()
     @Published var receivedInvite: Bool = false
@@ -57,18 +58,33 @@ class GameVM: NSObject, ObservableObject {
         let uuidString = UUID().uuidString
         self.highestUUIDReceived = uuidString
         self.players = [Player(id: uuidString, name: yourName)]
-
-        // MultpeerConnectivity
-        myPeerId = MCPeerID(displayName: yourName)
-        session = MCSession(peer: myPeerId)
-        nearbyServiceAdvertiser = MCNearbyServiceAdvertiser(peer: myPeerId, discoveryInfo: nil, serviceType: serviceType)
-        nearbyServiceBrowser = MCNearbyServiceBrowser(peer: myPeerId, serviceType: serviceType)
         super.init()
-        session.delegate = self
-        nearbyServiceAdvertiser.delegate = self
-        nearbyServiceBrowser.delegate = self
+        
     }
     
+//    deinit {
+//        nearbyServiceAdvertiser.stopAdvertisingPeer()
+//        nearbyServiceBrowser.stopBrowsingForPeers()
+//    }
+    
+    func setUpMultipeerConnectivity(yourName: String) {
+        // MultpeerConnectivity
+        myPeerId = MCPeerID(displayName: yourName)
+        session = MCSession(peer: myPeerId!)
+        nearbyServiceAdvertiser = MCNearbyServiceAdvertiser(peer: myPeerId!, discoveryInfo: nil, serviceType: serviceType)
+        nearbyServiceBrowser = MCNearbyServiceBrowser(peer: myPeerId!, serviceType: serviceType)
+
+        session!.delegate = self
+        nearbyServiceAdvertiser!.delegate = self
+        nearbyServiceBrowser!.delegate = self
+    }
+    
+    func tearDownMultipeerConnectivity() {
+        myPeerId = nil
+        session = nil
+        nearbyServiceAdvertiser = nil
+        nearbyServiceBrowser = nil
+    }
     
     func startGame() {
         if gameType == .peer {
@@ -101,23 +117,28 @@ class GameVM: NSObject, ObservableObject {
         players.removeSubrange(1..<players.count)
     }
     
+    func initiateEndGame() {
+        endGame()
+        
+        if multiplayerGame {
+            let gameMove = MPGameMove(action: .end)
+            sendMove(gameMove: gameMove)
+        }
+    }
+    
     func endGame() {
         self.simpleReset()
         self.removeOtherPlayers()
         self.playing = false
         
-        if multiplayerGame {
-            let gameMove = MPGameMove(action: .end)
-            sendMove(gameMove: gameMove)
-            
-            if gameType == .peer {
-                MPdisconnect()
-            }
+        if gameType == .peer {
+            MPdisconnect()
+            MPstopAdvertisingAndBrowsing()
+        }
 
-            if gameType == .online {
-                self.match?.disconnect()
-                self.highestUUIDReceived = players[0].id
-            }
+        if gameType == .online {
+            self.match?.disconnect()
+            self.highestUUIDReceived = players[0].id
         }
     }
     
@@ -214,7 +235,7 @@ class GameVM: NSObject, ObservableObject {
         do {
             if let data = gameMove.data() {
                 if self.gameType == .peer {
-                    try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+                    try session?.send(data, toPeers: session!.connectedPeers, with: .reliable)
                 }
                 if self.gameType == .online {
                     try match?.sendData(toAllPlayers: data, with: .reliable)

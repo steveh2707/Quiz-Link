@@ -30,9 +30,6 @@ struct ShowQuestionsOrEndScreen: View {
                 dismiss()
             }
         }
-        .onAppear {
-            gameVM.MPstopAdvertisingAndBrowsing()
-        }
         .onDisappear {
             gameVM.endGame()
         }
@@ -69,13 +66,14 @@ struct ShowQuestionsOrEndScreen: View {
                 .foregroundColor(Color.theme.primaryTextInverse)
                 
                 Button("Quit Game") {
-                    if gameVM.multiplayerGame {
-                        let gameMove = MPGameMove(action: .end)
-                        gameVM.sendMove(gameMove: gameMove)
-                        gameVM.endGame()
-                    } else {
-                        dismiss()
-                    }
+//                    if gameVM.multiplayerGame {
+//                        let gameMove = MPGameMove(action: .end)
+//                        gameVM.sendMove(gameMove: gameMove)
+//                        gameVM.endGame()
+//                    } else {
+//                        dismiss()
+//                    }
+                    gameVM.initiateEndGame()
                 }
                 .buttonStyle(.bordered)
             }

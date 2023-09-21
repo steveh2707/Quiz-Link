@@ -14,38 +14,42 @@ extension String {
 
 @MainActor
 extension GameVM {
-//    deinit {
-//        stopAdvertisingAndBrowsing()
+
+    
+//    private func MPstartAdvertising() {
+//        
+//    }
+//    
+//    private func MPstopAdvertising() {
+//        
+//    }
+//    
+//    private func MPstartBrowsing() {
+//        
+//    }
+//    
+//    private func MPstopBrowsing() {
+//        
 //    }
     
-    private func MPstartAdvertising() {
-        nearbyServiceAdvertiser.startAdvertisingPeer()
-    }
-    
-    private func MPstopAdvertising() {
-        nearbyServiceAdvertiser.stopAdvertisingPeer()
-    }
-    
-    private func MPstartBrowsing() {
-        nearbyServiceBrowser.startBrowsingForPeers()
-    }
-    
-    private func MPstopBrowsing() {
-        nearbyServiceBrowser.stopBrowsingForPeers()
-    }
-    
     func MPstartAdvertisingAndBrowsing() {
-        MPstartAdvertising()
-        MPstartBrowsing()
+//        MPstartAdvertising()
+//        MPstartBrowsing()
+        
+        nearbyServiceAdvertiser?.startAdvertisingPeer()
+        nearbyServiceBrowser?.startBrowsingForPeers()
     }
     
     func MPstopAdvertisingAndBrowsing() {
-        MPstopAdvertising()
-        MPstopBrowsing()
+//        MPstopAdvertising()
+//        MPstopBrowsing()
+        nearbyServiceAdvertiser?.stopAdvertisingPeer()
+        nearbyServiceBrowser?.stopBrowsingForPeers()
+        print("stop called")
     }
     
     func MPinvitePeer(peer: MCPeerID) {
-        nearbyServiceBrowser.invitePeer(peer, to: session, withContext: nil, timeout: 30)
+        nearbyServiceBrowser?.invitePeer(peer, to: session!, withContext: nil, timeout: 30)
     }
     
     func MPacceptInvite() {
@@ -92,7 +96,7 @@ extension GameVM {
     
     func MPdisconnect() {
         self.paired = false
-        self.session.disconnect()
+        self.session?.disconnect()
     }
 }
 

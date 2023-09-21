@@ -42,7 +42,7 @@ struct AnswerRow: View {
                 gameVM.selectAnswer(index: 0, answer: answer)
                 
                 if gameVM.multiplayerGame {
-                    let gameMove = MPGameMove(action: .move, playerName: gameVM.myPeerId.displayName, answer: answer)
+                    let gameMove = MPGameMove(action: .move, playerName: gameVM.myPeerId?.displayName, answer: answer)
                     gameVM.sendMove(gameMove: gameMove)
                 }
                 

@@ -72,7 +72,7 @@ struct QuestionView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("End Game") {
-                    gameVM.endGame()
+                    gameVM.initiateEndGame()
                 }
                 .buttonStyle(.bordered)
             }
