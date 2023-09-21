@@ -10,68 +10,81 @@ import SwiftUI
 struct QuestionView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var gameVM: GameVM
-    @EnvironmentObject var connectionManager: MPConnectionManager
+    @EnvironmentObject var mpVM: MPConnectionManager
+    @EnvironmentObject var gkVM: GKConnectionManager
     
     var body: some View {
         VStack(spacing: 20) {
             
-            HStack {
-                Text("Quiz Game")
-                    .accentTitle()
-                
-                Spacer()
-                
-                Text("\(gameVM.index+1) out of \(gameVM.length)")
+            if gameVM.trivia.isEmpty {
+                Text("Getting question set...")
                     .foregroundColor(Color.theme.accent)
-                    .fontWeight(.heavy)
-            }
-            
-            ProgressBar(progress: gameVM.progress)
-            
-            VStack(alignment: .leading, spacing: 20) {
-                Text(gameVM.question)
-                    .font(.system(size: 20))
-                    .bold()
-                    .foregroundColor(.theme.secondaryText)
-                    .padding(.bottom)
-                    .fixedSize(horizontal: false, vertical: true)
+                ProgressView()
                 
-                ForEach(gameVM.answerChoices, id: \.id) { answer in
-                    AnswerRow(answer: answer)
-                }
-            }
-            
-            Button("Next") {
-                gameVM.goToNextQuestion()
-                if gameVM.gameType == .peer {
-                    let gameMove = MPGameMove(action: .next)
-                    connectionManager.send(gameMove: gameMove)
-                }
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(!gameVM.allPlayersAnswered)
-            
-            Spacer(minLength: 0)
-            
-            ScrollView(.horizontal, showsIndicators: false) {
+            } else {
+                
                 HStack {
-                    ForEach(gameVM.players) { player in
-                        Score(player: player)
+                    Text("Quiz Game")
+                        .accentTitle()
+                    
+                    Spacer()
+                    
+                    Text("\(gameVM.index+1) out of \(gameVM.length)")
+                        .foregroundColor(Color.theme.accent)
+                        .fontWeight(.heavy)
+                }
+                
+                ProgressBar(progress: gameVM.progress)
+                
+                VStack(alignment: .leading, spacing: 20) {
+                    Text(gameVM.question)
+                        .font(.system(size: 20))
+                        .bold()
+                        .foregroundColor(.theme.secondaryText)
+                        .padding(.bottom)
+                        .fixedSize(horizontal: false, vertical: true)
+                    
+                    ForEach(gameVM.answerChoices, id: \.id) { answer in
+                        AnswerRow(answer: answer)
                     }
                 }
+                
+                Button("Next") {
+                    switch gameVM.gameType {
+                    case .single:
+                        gameVM.goToNextQuestion()
+                    case .peer:
+                        mpVM.initiateGoToNextQuestion()
+                    case .online:
+                        gkVM.initiateGoToNextQuestion()
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!gameVM.allPlayersAnswered)
+                
+                Spacer(minLength: 0)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        ForEach(gameVM.players) { player in
+                            Score(player: player)
+                        }
+                    }
+                }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("End Game") {
-                    if gameVM.gameType == .peer {
-                        let gameMove = MPGameMove(action: .end)
-                        connectionManager.send(gameMove: gameMove)
-                        connectionManager.endGame()
-                    } else {
-                        dismiss()
+                    switch gameVM.gameType {
+                    case .single:
+                        gameVM.endGame()
+                    case .peer:
+                        mpVM.initiateEndGame()
+                    case .online:
+                        gkVM.initiateEndGame()
                     }
                 }
                 .buttonStyle(.bordered)
@@ -89,21 +102,24 @@ struct QuestionView: View {
         }
 
         .onAppear {
-            gameVM.remainingTime = maxRemainingTime
-            if gameVM.gameType == .single || gameVM.players[0].isHost {
-                Task {
+            
+            Task {
+                switch gameVM.gameType {
+                case .single:
                     await gameVM.fetchTrivia()
-                    
-                    if gameVM.gameType == .peer {
-                        let gameMove = MPGameMove(action: .questions, questionSet: gameVM.trivia)
-                        connectionManager.send(gameMove: gameMove)
+                case .peer:
+                    if gameVM.players[0].isHost {
+                        await gameVM.fetchTrivia()
+                        mpVM.sendQuestionSet()
+                    }
+                case .online:
+                    if gameVM.players[0].isHost {
+                        await gameVM.fetchTrivia()
+                        gkVM.sendQuestionSet()
                     }
                 }
-            } else if gameVM.gameType == .online {
-                Task {
-                    await gameVM.fetchTrivia()
-                }
             }
+            
         }
         .onReceive(gameVM.countdownTimer) { _ in
             gameVM.remainingTime -= 1

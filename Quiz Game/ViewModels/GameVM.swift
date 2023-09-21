@@ -8,15 +8,12 @@
 import Foundation
 import SwiftUI
 
-
-
 @MainActor
 class GameVM: ObservableObject {
     @Published var gameType: GameType = .single
     @Published var players: [Player]
-    @Published var host: Bool = false
-    
-    @Published var startGame: Bool = false
+
+    @Published var playing: Bool = false
     
     private(set) var yourName: String
     private(set) var trivia: [Trivia.Question] = []
@@ -27,6 +24,13 @@ class GameVM: ObservableObject {
     @Published private(set) var answerChoices: [Answer] = []
     @Published private(set) var progress: CGFloat = 0.00
     @Published var remainingTime = maxRemainingTime
+    
+    
+    @Published var viewState: ViewState?
+    @Published var hasError = false
+    @Published var error: NetworkingManager.NetworkingError?
+    
+//    @Published var test = "Original"
     
     let countdownTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
@@ -45,22 +49,37 @@ class GameVM: ObservableObject {
         self.progress = 0.00
         self.remainingTime = maxRemainingTime
     }
+    
+    private func removeOtherPlayers() {
+        players.removeSubrange(1..<players.count)
+    }
 
-    func reset() {
-        self.simpleReset()
+    private func resetPlayersScoresAndAnswers() {
         for i in 0..<players.count {
             players[i].score = 0
             players[i].answer = nil
         }
     }
     
-    func endGame() {
+    func resetGame() {
         self.simpleReset()
-        players.removeSubrange(1..<players.count)
+        self.resetPlayersScoresAndAnswers()
+    }
+    
+    func endGame() {
+        self.playing = false
+        self.simpleReset()
+        self.removeOtherPlayers()
+        self.resetPlayersScoresAndAnswers()
+        self.players[0].name = yourName
     }
     
     
     func fetchTrivia() async {
+        
+        viewState = .fetching
+        defer { viewState = .finished }
+        
         do {
             // interact with API and assign response to decodedResponse variable
             let decodedResponse = try await NetworkingManager.shared.request(.trivia(amount: 10), type: Trivia.self)
@@ -75,12 +94,12 @@ class GameVM: ObservableObject {
             if let errorCode = (error as NSError?)?.code, errorCode == NSURLErrorCancelled { return }
             
             // assign any other error to local error variable to be displayed to user
-//            self.hasError = true
-//            if let networkingError = error as? NetworkingManager.NetworkingError {
-//                self.error = networkingError
-//            } else {
-//                self.error = .custom(error: error)
-//            }
+            self.hasError = true
+            if let networkingError = error as? NetworkingManager.NetworkingError {
+                self.error = networkingError
+            } else {
+                self.error = .custom(error: error)
+            }
             print("Error fetching trivia: \(error)")
         }
     }

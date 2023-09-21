@@ -15,7 +15,6 @@ struct StartView: View {
     @StateObject private var gkConnectionManager = GKConnectionManager()
     
     @AppStorage("yourName") var yourName = ""
-    @State private var startGame = false
     
     init(yourName: String) {
         self.yourName = yourName
@@ -50,21 +49,18 @@ struct StartView: View {
                     case .single:
                         Spacer()
                         Button("Start Game") {
-                            startGame = true
+                            gameVM.playing = true
                         }
                         .buttonStyle(.borderedProminent)
                         Spacer()
                     case .peer:
-                        MPPeersView(startGame: $startGame)
+                        MPPeersView()
                             .environmentObject(mpConnectionManager)
                             .environmentObject(gameVM)
                     case .online:
-                        GKPeersView(startGame: $startGame)
+                        GKPeersView(startGame: $gameVM.playing)
                             .environmentObject(gkConnectionManager)
                             .environmentObject(gameVM)
-                            .onAppear {
-                                gkConnectionManager.authenticateUser()
-                            }
                     }
                 }
                 .padding()
@@ -82,19 +78,11 @@ struct StartView: View {
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.theme.background)
-            .fullScreenCover(isPresented: $startGame) {
+            .fullScreenCover(isPresented: $gameVM.playing) {
                 ShowQuestionsOrEndScreen()
                     .environmentObject(mpConnectionManager)
                     .environmentObject(gameVM)
-                    .onDisappear {
-                        gameVM.endGame()
-                    }
-            }
-            .onChange(of: gameVM.gameType) { newGameType in
-                if newGameType != .peer {
-//                    connectionManager.isAvailableToPlay = false
-                    mpConnectionManager.stopAdvertisingAndBrowsing()
-                }
+                    .environmentObject(gkConnectionManager)
             }
         }
     }

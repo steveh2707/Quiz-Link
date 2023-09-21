@@ -11,7 +11,7 @@ struct MPPeersView: View {
     @EnvironmentObject var connectionManager: MPConnectionManager
     @EnvironmentObject var gameVM: GameVM
     
-    @Binding var startGame: Bool
+//    @Binding var startGame: Bool
     
     var body: some View {
         VStack(spacing: 20) {
@@ -28,12 +28,12 @@ struct MPPeersView: View {
                         Spacer()
                         if !connectionManager.session.connectedPeers.contains(peer) {
                             Button("Connect") {
-                                connectionManager.invitePeer(peer: peer, game: gameVM)
+                                connectionManager.invitePeer(peer: peer)
                             }
                             .buttonStyle(.borderedProminent)
                         } else {
                             Button("Disconnect") {
-                                connectionManager.endGame()
+                                connectionManager.disconnectFromPeers()
                             }
                             .buttonStyle(.bordered)
                         }
@@ -43,10 +43,8 @@ struct MPPeersView: View {
             }
             
             Button("Start Game") {
-                gameVM.players[0].isHost = true
-                let gameMove = MPGameMove(action: .start)
-                connectionManager.send(gameMove: gameMove)
-                connectionManager.startGame()
+//                gameVM.players[0].isHost = true
+                connectionManager.initiateStartGame()
             }
             .buttonStyle(.borderedProminent)
             .disabled(connectionManager.session.connectedPeers.count == 0)
@@ -54,7 +52,7 @@ struct MPPeersView: View {
         }
         .alert("Received invite from \(connectionManager.receivedInviteFrom?.displayName ?? "Unknown")", isPresented: $connectionManager.receivedInvite) {
             Button("Accept Invite") {
-                connectionManager.acceptInvite(game: gameVM)
+                connectionManager.acceptInvite()
             }
             Button("Reject") {
                 connectionManager.declineInvite()
@@ -62,21 +60,19 @@ struct MPPeersView: View {
         }
         .background(Color.theme.background)
         .onAppear {
-            gameVM.players[0].isHost = false
-//            connectionManager.isAvailableToPlay = true
+            connectionManager.setup(game: gameVM)
             connectionManager.startAdvertisingAndBrowsing()
         }
         .onDisappear {
-//            connectionManager.isAvailableToPlay = false
             connectionManager.stopAdvertisingAndBrowsing()
-            connectionManager.endGame()
+            connectionManager.disconnectFromPeers()
         }
-        .onChange(of: connectionManager.playing) { newValue in
+        .onChange(of: gameVM.playing) { newValue in
             if newValue {
                 for player in connectionManager.session.connectedPeers {
                     gameVM.players.append(Player(name: player.displayName))
                 }
-                startGame = newValue
+//                startGame = newValue
             }
         }
     }
@@ -84,7 +80,7 @@ struct MPPeersView: View {
 
 struct MPPeersView_Previews: PreviewProvider {
     static var previews: some View {
-        MPPeersView(startGame: .constant(false))
+        MPPeersView()
             .environmentObject(MPConnectionManager(yourName: "Sample"))
             .environmentObject(GameVM(yourName: "Sample"))
     }

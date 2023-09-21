@@ -11,6 +11,7 @@ extension String {
     static var serviceName = "QuizGame"
 }
 
+@MainActor
 class MPConnectionManager: NSObject, ObservableObject {
     let serviceType = String.serviceName
     let session: MCSession
@@ -29,21 +30,7 @@ class MPConnectionManager: NSObject, ObservableObject {
     @Published var invitationHandler: ((Bool, MCSession?) -> Void)?
     
     @Published var paired: Bool = false
-    @Published var playing: Bool = false
-
-    
-//    var isAvailableToPlay: Bool = false
-//    {
-//        didSet {
-//            if isAvailableToPlay {
-//                startAdvertising()
-//                startBrowsing()
-//            } else {
-//                stopAdvertising()
-//                stopBrowsing()
-//            }
-//        }
-//    }
+//    @Published var playing: Bool = false
     
     init(yourName: String) {
         myPeerId = MCPeerID(displayName: yourName)
@@ -56,58 +43,27 @@ class MPConnectionManager: NSObject, ObservableObject {
         nearbyServiceBrowser.delegate = self
     }
     
-    deinit {
-        stopAdvertisingAndBrowsing()
-    }
+//    deinit {
+//        stopAdvertisingAndBrowsing()
+//    }
     
-    private func startAdvertising() {
+    func startAdvertisingAndBrowsing() {
         nearbyServiceAdvertiser.startAdvertisingPeer()
-    }
-    
-    private func stopAdvertising() {
-        nearbyServiceAdvertiser.stopAdvertisingPeer()
-    }
-    
-    private func startBrowsing() {
         nearbyServiceBrowser.startBrowsingForPeers()
     }
     
-    private func stopBrowsing() {
+    func stopAdvertisingAndBrowsing() {
+        nearbyServiceAdvertiser.stopAdvertisingPeer()
         nearbyServiceBrowser.stopBrowsingForPeers()
     }
     
-    func startAdvertisingAndBrowsing() {
-//        isAvailableToPlay = true
-        startAdvertising()
-        startBrowsing()
-    }
-    
-    func stopAdvertisingAndBrowsing() {
-//        isAvailableToPlay = false
-        stopAdvertising()
-        stopBrowsing()
-        availablePeers.removeAll()
-    }
-    
-    func send(gameMove: MPGameMove) {
-        if !session.connectedPeers.isEmpty {
-            do {
-                if let data = gameMove.data() {
-                    try session.send(data, toPeers: session.connectedPeers, with: .reliable)
-                }
-            } catch {
-                print("error sending \(error.localizedDescription)")
-            }
-        }
-    }
-    
-    @MainActor
-    func invitePeer(peer: MCPeerID, game: GameVM) {
+
+    func invitePeer(peer: MCPeerID) {
         nearbyServiceBrowser.invitePeer(peer, to: session, withContext: nil, timeout: 30)
     }
     
-    @MainActor
-    func acceptInvite(game: GameVM) {
+
+    func acceptInvite() {
         if let invitationHandler = invitationHandler {
             invitationHandler(true, session)
         }
@@ -119,18 +75,92 @@ class MPConnectionManager: NSObject, ObservableObject {
         }
     }
     
-    func startGame() {
-//        self.isAvailableToPlay = false
-        self.stopAdvertisingAndBrowsing()
-        self.playing = true
-        
+    func initiateStartGame() {
+        game?.players[0].isHost = true
+        let gameMove = MPGameMove(action: .start)
+        sendMove(gameMove: gameMove)
+        startGame()
     }
     
-    func endGame() {
-//        self.isAvailableToPlay = true
-        self.playing = false
+    private func startGame() {
+        self.stopAdvertisingAndBrowsing()
+        game?.playing = true
+    }
+    
+    func initiatePlayAgain() {
+        let gameMove = MPGameMove(action: .reset)
+        sendMove(gameMove: gameMove)
+        game?.resetGame()
+    }
+    
+    func initiateEndGame() {
+        let gameMove = MPGameMove(action: .end)
+        sendMove(gameMove: gameMove)
+        endGame()
+    }
+    
+    func initiateGoToNextQuestion() {
+        let gameMove = MPGameMove(action: .next)
+        sendMove(gameMove: gameMove)
+        game?.goToNextQuestion()
+    }
+    
+    func disconnectFromPeers() {
         self.paired = false
         self.session.disconnect()
+    }
+    
+    private func endGame() {
+        self.paired = false
+        self.session.disconnect()
+        game?.endGame()
+    }
+    
+    
+    func sendMove(gameMove: MPGameMove) {
+        if !session.connectedPeers.isEmpty {
+            do {
+                if let data = gameMove.data() {
+                    try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+                }
+            } catch {
+                print("error sending \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func sendQuestionSet() {
+        let gameMove = MPGameMove(action: .questions, questionSet: game?.trivia ?? [])
+        sendMove(gameMove: gameMove)
+    }
+    
+    func sendQuestionAnswer(answer: Answer) {
+        let gameMove = MPGameMove(action: .move, playerName: myPeerId.displayName, answer: answer)
+        sendMove(gameMove: gameMove)
+    }
+    
+    
+    func handleReceivedMoves(gameMove: MPGameMove) {
+        switch gameMove.action {
+        case .start:
+            self.game?.players[0].isHost = false
+            self.startGame()
+        case .questions:
+            self.game?.setTrivia(questions: gameMove.questionSet)
+        case .move:
+            if let answer = gameMove.answer, let name = gameMove.playerName {
+                let i = self.game?.findIndexOfPlayer(name: name)
+                if let i, i > -1 {
+                    self.game?.selectAnswer(index: i, answer: answer)
+                }
+            }
+        case .next:
+            self.game?.goToNextQuestion()
+        case .reset:
+            self.game?.resetGame()
+        case .end:
+            self.endGame()
+        }
     }
 }
 
@@ -175,9 +205,9 @@ extension MPConnectionManager: MCSessionDelegate {
         case .notConnected:
             DispatchQueue.main.async {
                 self.paired = false
-                self.playing = false
-                self.startAdvertisingAndBrowsing()
-//                self.isAvailableToPlay = true
+//                self.playing = false
+                self.game?.playing = false
+//                self.startAdvertisingAndBrowsing()
             }
         case .connected:
             DispatchQueue.main.async {
@@ -186,9 +216,9 @@ extension MPConnectionManager: MCSessionDelegate {
         default:
             DispatchQueue.main.async {
                 self.paired = false
-                self.playing = false
-                self.startAdvertisingAndBrowsing()
-//                self.isAvailableToPlay = true
+//                self.playing = false
+                self.game?.playing = false
+//                self.startAdvertisingAndBrowsing()
             }
         }
     }
@@ -198,25 +228,7 @@ extension MPConnectionManager: MCSessionDelegate {
         
         if let gameMove = try? JSONDecoder().decode(MPGameMove.self, from: data) {
             DispatchQueue.main.async {
-                switch gameMove.action {
-                case .start:
-                    self.startGame()
-                case .questions:
-                    self.game?.setTrivia(questions: gameMove.questionSet)
-                case .move:
-                    if let answer = gameMove.answer, let name = gameMove.playerName {
-                        let i = self.game?.findIndexOfPlayer(name: name)
-                        if let i, i > -1 {
-                            self.game?.selectAnswer(index: i, answer: answer)
-                        }
-                    }
-                case .next:
-                    self.game?.goToNextQuestion()
-                case .reset:
-                    self.game?.reset()
-                case .end:
-                    self.endGame()
-                }
+                self.handleReceivedMoves(gameMove: gameMove)
             }
         }
     }

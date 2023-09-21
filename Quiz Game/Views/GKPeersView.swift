@@ -24,14 +24,18 @@ struct GKPeersView: View {
                 .buttonStyle(.borderedProminent)
             }
         }
-        .onChange(of: connectionManager.playing) { newValue in
-            if newValue {
-                for player in connectionManager.otherPlayers {
-                    gameVM.players.append(Player(name: player.displayName))
-                }
-                startGame = newValue
-            }
+        .onAppear {
+            connectionManager.setup(game: gameVM)
+            connectionManager.authenticateUser()
         }
+//        .onChange(of: connectionManager.playing) { newValue in
+//            if newValue {
+//                for player in connectionManager.otherPlayers {
+//                    gameVM.players.append(Player(name: player.displayName))
+//                }
+//                startGame = newValue
+//            }
+//        }
         
     }
 }

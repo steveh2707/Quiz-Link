@@ -8,14 +8,16 @@
 import Foundation
 import GameKit
 
+@MainActor
 class GKConnectionManager: NSObject, ObservableObject {
     @Published var authenticationState = GKPlayerAuthState.authenticating
-    @Published var playing: Bool = false
     
     var match: GKMatch?
     var otherPlayers: [GKPlayer] = []
     var localPlayer = GKLocalPlayer.local
     var playerUUIDKey = UUID().uuidString
+    
+    var highestUUIDReceived: String?  // Used to determine host
     
     var game: GameVM?
     
@@ -69,31 +71,100 @@ class GKConnectionManager: NSObject, ObservableObject {
         match = newMatch // likely be able to delete this
         match?.delegate = self
         otherPlayers = match?.players ?? []
-//        for player in otherPlayers {
-//            game?.players.append(Player(name: player.displayName))
-//        }
-        sendString("began:\(playerUUIDKey)")
-        playing = true
+        for player in otherPlayers {
+            game?.players.append(Player(name: player.displayName))
+        }
+        game?.players[0].name = localPlayer.displayName
+        let gameMove = MPGameMove(action: .start, UUIDString: game?.players[0].id)
+        sendMove(gameMove: gameMove)
     }
     
-    func receivedString(_ message: String) {
-        let messageSplit = message.split(separator: ".")
-        guard let messagePrefix = messageSplit.first else { return }
-        
-        let parameter = String(messageSplit.last ?? "")
-        
-        switch messagePrefix {
-        case "began":
-            // unlikely scenario that UUIDs are the same
-            if playerUUIDKey == parameter {
-                playerUUIDKey = UUID().uuidString
-                sendString("began: \(playerUUIDKey)")
-                break
+    
+    private func endGame() {
+        self.match?.disconnect()
+        game?.endGame()
+    }
+    
+    func initiatePlayAgain() {
+        let gameMove = MPGameMove(action: .reset)
+        sendMove(gameMove: gameMove)
+        game?.resetGame()
+    }
+    
+    func initiateEndGame() {
+        let gameMove = MPGameMove(action: .end)
+        sendMove(gameMove: gameMove)
+        endGame()
+    }
+    
+    @MainActor
+    func initiateGoToNextQuestion() {
+        let gameMove = MPGameMove(action: .next)
+        sendMove(gameMove: gameMove)
+        game?.goToNextQuestion()
+    }
+    
+    func sendMove(gameMove: MPGameMove) {
+        do {
+            if let data = gameMove.data() {
+                try match?.sendData(toAllPlayers: data, with: .reliable)
             }
+        } catch {
+            print("error sending \(error.localizedDescription)")
+        }
+    }
+    
+    func sendQuestionSet() {
+        let gameMove = MPGameMove(action: .questions, questionSet: game?.trivia ?? [])
+        sendMove(gameMove: gameMove)
+    }
+    
+    func sendQuestionAnswer(answer: Answer) {
+        let gameMove = MPGameMove(action: .move, playerName: localPlayer.displayName, answer: answer)
+        sendMove(gameMove: gameMove)
+    }
+    
+    @MainActor
+    func assignHost(uuid: String) {
+        if highestUUIDReceived == nil {
+            highestUUIDReceived = game?.players[0].id
+        }
+        
+        // logic to set host for multiple players
+        if game?.players[0].id == highestUUIDReceived {
+            if let id = game?.players[0].id, id > uuid {
+                game?.players[0].isHost = true
+            } else {
+                game?.players[0].isHost = false
+                highestUUIDReceived = uuid
+            }
+        }
+    }
+    
+    @MainActor
+    func GKHandleMove(gameMove: MPGameMove) {
+        switch gameMove.action {
+        case .start:
+            if let uuid = gameMove.UUIDString {
+                assignHost(uuid: uuid)
+            }
+            game?.playing = true
             
-            
-        default:
-            break
+        case .questions:
+            self.game?.setTrivia(questions: gameMove.questionSet)
+        case .move:
+            if let answer = gameMove.answer, let name = gameMove.playerName {
+                let i = self.game?.findIndexOfPlayer(name: name)
+                if let i, i > -1 {
+                    self.game?.selectAnswer(index: i, answer: answer)
+                }
+            }
+        case .next:
+            self.game?.goToNextQuestion()
+        case .reset:
+            self.game?.resetGame()
+        case .end:
+            self.endGame()
         }
     }
 }
@@ -101,7 +172,7 @@ class GKConnectionManager: NSObject, ObservableObject {
 
 extension GKConnectionManager: GKMatchmakerViewControllerDelegate {
     
-    @MainActor
+    @MainActor 
     func matchmakerViewController(_ viewController: GKMatchmakerViewController, didFind match: GKMatch) {
         viewController.dismiss(animated: true)
         startGame(newMatch: match)
@@ -118,13 +189,11 @@ extension GKConnectionManager: GKMatchmakerViewControllerDelegate {
 
 extension GKConnectionManager: GKMatchDelegate {
     func match(_ match: GKMatch, didReceive data: Data, fromRemotePlayer player: GKPlayer) {
-        let content = String(decoding: data, as: UTF8.self)
         
-        if content.starts(with: "strData:") {
-            let message = content.replacing("strData", with: "")
-            receivedString(message)
-        } else {
-            return
+        if let gameMove = try? JSONDecoder().decode(MPGameMove.self, from: data) {
+            DispatchQueue.main.async {
+                self.GKHandleMove(gameMove: gameMove)
+            }
         }
     }
     

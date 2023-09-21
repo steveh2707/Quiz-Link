@@ -9,7 +9,9 @@ import SwiftUI
 
 struct AnswerRow: View {
     @EnvironmentObject var gameVM: GameVM
-    @EnvironmentObject var connectionManager: MPConnectionManager
+    @EnvironmentObject var mpVM: MPConnectionManager
+    @EnvironmentObject var gkVM: GKConnectionManager
+    
     var answer: Answer
     @State private var isSelected = false
     
@@ -40,9 +42,13 @@ struct AnswerRow: View {
             if gameVM.players[0].answer == nil {
                 isSelected = true
                 gameVM.selectAnswer(index: 0, answer: answer)
+                
                 if gameVM.gameType == .peer {
-                    let gameMove = MPGameMove(action: .move, playerName: connectionManager.myPeerId.displayName, questionSet: [], answer: answer)
-                    connectionManager.send(gameMove: gameMove)
+                    mpVM.sendQuestionAnswer(answer: answer)
+                }
+                
+                if gameVM.gameType == .online {
+                    gkVM.sendQuestionAnswer(answer: answer)
                 }
             }
             
